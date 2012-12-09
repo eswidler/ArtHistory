@@ -31,18 +31,44 @@ define("mappings", default="../data/movie_actors.csv", help="key mapping file")
 class ArtHistory(tornado.web.Application):
     """The Movie Service Web Application"""
     def __init__(self, db):
-        handlers = [
-            (r"/", HomeHandler),
-            (r"/actors(\..+)?", HomeHandler),
-            (r"/movies(\..+)?", HomeHandler),
-            (r"/actors/([0-9]+)(\..+)?", HomeHandler),
-            (r"/movies/([0-9]+)(\..+)?", HomeHandler)
-        ]
+        favicon_path = '/templates/static/favicon.ico'
         settings = dict(
+            static_path=os.path.join(os.path.dirname(__file__), "templates/static"),
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
-            debug=True,
+            jquery_path=os.path.join(os.path.dirname(__file__), "templates"),
+            #Not really working well, will change back to true later
+            debug=False,
             autoescape=None,
         )
+        
+        handlers = [
+            #Default Home map
+            (r"/", HomeHandler),
+            
+            #Urls for REST retrieval of data
+            (r"/paintings(\..+)?", AllPaintingsHandler),
+            (r"/paintings/([0-9]+)(\..+)?", PaintingHandler), 
+            (r"/paintings/([0-9]+)/location(\..+)?", PaintingHandler),
+            
+            #Urls for Application's queries to the server
+            (r"/pointUpdate(\..+)?", PointUpdateHandler),
+            
+            #Urls for painting info updation, new paintings, painting deletetion
+            #(r"/pointUpdate(\..+)?", PointUpdateHandler),
+           #(r"/pointUpdate(\..+)?", PointUpdateHandler),
+            #(r"/pointUpdate(\..+)?", PointUpdateHandler),
+            
+            #Urls for css, jss, and support files
+            (r"/css/([0-9a-zA-Z]+\.css)", CSSHandler),
+            #can't get this one to work, throws 404's even though the path seems to be right, it's just
+            #images though for the jquery UI so not that important
+            (r"/js/([0-9a-zA-Z\.\-\/\_]+).png", tornado.web.StaticFileHandler, dict(path=settings['jquery_path'])),
+            (r"/js/([0-9a-zA-Z\.\-\/\_]+)(\..+)", JQueryHandler),
+            
+            #Favicon handler
+            (r"/favicon.ico", tornado.web.StaticFileHandler, dict(path=settings['static_path'])),
+        ]
+        
         tornado.web.Application.__init__(self, handlers, **settings)
         self.db = db
         print "Webservice Started..."
@@ -67,9 +93,78 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class HomeHandler(BaseHandler):
     def get(self):
-        self.write(codecs.open('templates/world.html', 'r', encoding='utf-8'))
-        #self.write("<html><body><h1>Art History</h1><p>should be a paragraph</p></body></html>")
+        self.set_header("Content-Type", "text/html")
+        baseHTML = codecs.open('templates/ArtHistory.html', 'r', encoding='utf-8')
+        self.write(baseHTML.read())
+        #self.write("<html><body><h1>Art History</h1><p>just an example of outputting html</p></body></html>")
 
+#Gets info on all paintings
+#Check here for paramaters for range and mediums
+class AllPaintingsHandler(BaseHandler):
+    def get(self):
+        pass
+    
+#Gets info on specific painting
+#Be sure there's a well formatted HTML one for use in the application
+class PaintingHandler(BaseHandler):
+    def get(self, paintingID, format):
+        pass
+    
+class CSSHandler(BaseHandler):
+    def get(self, fileName):
+        self.set_header("Content-Type", "text/css")
+        baseHTML = codecs.open("templates/css/" + fileName, 'r', encoding='utf-8')
+        self.write(baseHTML.read())
+    
+class JQueryHandler(BaseHandler):
+    def get(self, fileName, format):
+        fileName = fileName + format
+        
+        if format == ".js":
+            self.set_header("Content-Type", "text/javascript")
+        elif format == ".css":
+            self.set_header("Content-Type", "text/css")
+            
+        baseHTML = codecs.open("templates/js/" + fileName, 'r', encoding='utf-8')
+        self.write(baseHTML.read())
+    
+class PointUpdateHandler(BaseHandler):
+    def get(self, format):
+        
+        yearRange = self.request.arguments.get("yearRange[]")
+        mediums = self.request.arguments.get("mediums[]")
+        
+        print "Year range " + str(yearRange)
+        print "Medium of Pieces " + str(mediums)
+        
+        responceDict = {'success':False, 'pieces':[], 'error':""}
+        self.set_header("Content-Type", "application/json")
+        
+        if yearRange is None or mediums is None:
+            responceDict["error"] = "Incorrect GET arguments provided"
+            
+            
+        else:
+            """Need new set of points, their geocoordinates, painting ID, and possibly medium for
+            map coloration purposes """
+            
+            pieces = []
+            
+            examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
+            examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
+            examplePiece3 = {'id':83, 'lat':85.02, 'lng':73.5, 'medium':'gesso'}
+            
+            pieces.append(examplePiece1)
+            pieces.append(examplePiece2)
+            pieces.append(examplePiece3)
+            
+            if len(pieces) > 0:
+                responceDict["pieces"] = pieces
+                responceDict["success"] = True
+            
+        self.write(responceDict)
+        
+            
 #UC1: Retrieve a list of all actors
 class ActorListHandler(BaseHandler):
     def get(self, format):
