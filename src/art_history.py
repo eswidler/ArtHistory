@@ -53,20 +53,18 @@ class ArtHistory(tornado.web.Application):
             #Urls for Application's queries to the server
             (r"/pointUpdate(\..+)?", PointUpdateHandler),
             
-            #Urls for painting info updation, new paintings, painting deletetion
+            #Urls for painting info updation, new paintings, painting deletetion, etc
             #(r"/pointUpdate(\..+)?", PointUpdateHandler),
            #(r"/pointUpdate(\..+)?", PointUpdateHandler),
             #(r"/pointUpdate(\..+)?", PointUpdateHandler),
             
             #Urls for css, jss, and support files
-            (r"/css/([0-9a-zA-Z]+\.css)", CSSHandler),
-            #can't get this one to work, throws 404's even though the path seems to be right, it's just
-            #images though for the jquery UI so not that important
-            (r"/js/([0-9a-zA-Z\.\-\/\_]+).png", tornado.web.StaticFileHandler, dict(path=settings['jquery_path'])),
-            (r"/js/([0-9a-zA-Z\.\-\/\_]+)(\..+)", JQueryHandler),
+            (r"/(css/[0-9a-zA-Z]+\.css)", CSSHandler),
+            (r"/(js/[0-9a-zA-Z\.\-\/\_]+.png)", tornado.web.StaticFileHandler, dict(path=settings['jquery_path'])),
+            (r"/js/([0-9a-zA-Z\.\-\/\_]+)(\.js)", JQueryHandler),
+            (r"/(js/[0-9a-zA-Z\.\-\/\_]+\.css)", CSSHandler),
+            (r"/([0-9a-zA-Z\.\-\/\_]+.[ico|png])", tornado.web.StaticFileHandler, dict(path=settings['static_path'])),
             
-            #Favicon handler
-            (r"/favicon.ico", tornado.web.StaticFileHandler, dict(path=settings['static_path'])),
         ]
         
         tornado.web.Application.__init__(self, handlers, **settings)
@@ -105,15 +103,17 @@ class AllPaintingsHandler(BaseHandler):
         pass
     
 #Gets info on specific painting
-#Be sure there's a well formatted HTML one for use in the application
 class PaintingHandler(BaseHandler):
     def get(self, paintingID, format):
-        pass
+        if format == ".json":
+            exampleDict = {'success': True, 'image': 'http://images.wikia.com/central/images/e/eb/250px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'}
+            self.write(exampleDict)
+            
     
 class CSSHandler(BaseHandler):
     def get(self, fileName):
         self.set_header("Content-Type", "text/css")
-        baseHTML = codecs.open("templates/css/" + fileName, 'r', encoding='utf-8')
+        baseHTML = codecs.open("templates/" + fileName, 'r', encoding='utf-8')
         self.write(baseHTML.read())
     
 class JQueryHandler(BaseHandler):
@@ -152,7 +152,7 @@ class PointUpdateHandler(BaseHandler):
             
             examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
             examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece3 = {'id':83, 'lat':85.02, 'lng':73.5, 'medium':'gesso'}
+            examplePiece3 = {'id':83, 'lat':65.02, 'lng':73.5, 'medium':'gesso'}
             
             pieces.append(examplePiece1)
             pieces.append(examplePiece2)
