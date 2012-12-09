@@ -1,0 +1,59 @@
+html, body {
+  height: 80%;
+  margin: 0;
+  padding: 0;
+}
+
+#map_canvas, #input_div, #piece_div{ 
+position: absolute; 
+}
+
+#map_canvas {
+  height: 100%;
+  z-index: 1;
+}
+
+@media print {
+  html, body {
+    height: auto;
+  }
+
+  #map_canvas {
+    height: 650px;
+  }
+}
+
+#input_div{
+	position: relative;
+	top: 120%;
+	z-index: 2;
+	left: 20%;
+	width: 60%;
+}
+
+#piece_div{
+	right: 20px;
+	width: 300px;
+	height: 450px;
+	background-color: #ffffff;
+	border: 1px solid black;
+	z-index: 2;
+	visibility:hidden;
+}
+
+#display_close_button{
+	position: absolute;
+	right: 10px;
+	cursor: pointer;
+}
+
+.clickCheck{
+	padding-right: 20px;
+	cursor: pointer;
+}
+
+.medSp{
+	height: 30px;
+	width: 60px;
+	background-color: #ffffff;
+}

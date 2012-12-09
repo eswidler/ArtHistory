@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<link href="css/default.css" rel="stylesheet" type="text/css">
+	
+	<!-- GOOGLE MAPS Initialization and functions
+	-->
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuO1airBjACG1H-kw53FisemvT6uxUGj0&sensor=false">
+    </script>
+    <script type="text/javascript">
+	  var map;
+      var chicago = new google.maps.LatLng(41.850033, -87.6500523);
+
+      /**
+       * The HomeControl adds a control to the map that
+       * returns the user to the control's defined home.
+       */
+
+      // Define a property to hold the Home state
+      HomeControl.prototype.home_ = null;
+
+      // Define setters and getters for this property
+      HomeControl.prototype.getHome = function() {
+        return this.home_;
+      }
+
+      HomeControl.prototype.setHome = function(home) {
+        this.home_ = home;
+      }
+
+      function HomeControl(controlDiv, map, home) {
+
+        // We set up a variable for this since we're adding
+        // event listeners later.
+        var control = this;
+
+        // Set the home property upon construction
+        control.home_ = home;
+
+        // Set CSS styles for the DIV containing the control
+        // Setting padding to 5 px will offset the control
+        // from the edge of the map
+        controlDiv.style.padding = '5px';
+
+        // Set CSS for the control border
+        var goHomeUI = document.createElement('div');
+        goHomeUI.style.backgroundColor = 'white';
+        goHomeUI.style.borderStyle = 'solid';
+        goHomeUI.style.borderWidth = '2px';
+        goHomeUI.style.cursor = 'pointer';
+        goHomeUI.style.textAlign = 'center';
+        goHomeUI.title = 'Click to set the map to Home';
+        controlDiv.appendChild(goHomeUI);
+
+        // Set CSS for the control interior
+        var goHomeText = document.createElement('div');
+        goHomeText.style.fontFamily = 'Arial,sans-serif';
+        goHomeText.style.fontSize = '12px';
+        goHomeText.style.paddingLeft = '4px';
+        goHomeText.style.paddingRight = '4px';
+        goHomeText.innerHTML = '<b>Home</b>';
+        goHomeUI.appendChild(goHomeText);
+
+        // Set CSS for the setHome control border
+        var setHomeUI = document.createElement('div');
+        setHomeUI.style.backgroundColor = 'white';
+        setHomeUI.style.borderStyle = 'solid';
+        setHomeUI.style.borderWidth = '2px';
+        setHomeUI.style.cursor = 'pointer';
+        setHomeUI.style.textAlign = 'center';
+        setHomeUI.title = 'Click to set Home to the current center';
+        controlDiv.appendChild(setHomeUI);
+
+        // Set CSS for the control interior
+        var setHomeText = document.createElement('div');
+        setHomeText.style.fontFamily = 'Arial,sans-serif';
+        setHomeText.style.fontSize = '12px';
+        setHomeText.style.paddingLeft = '4px';
+        setHomeText.style.paddingRight = '4px';
+        setHomeText.innerHTML = '<b>Set Home</b>';
+        setHomeUI.appendChild(setHomeText);
+
+        // Setup the click event listener for Home:
+        // simply set the map to the control's current home property.
+        google.maps.event.addDomListener(goHomeUI, 'click', function() {
+          var currentHome = control.getHome();
+          map.setCenter(currentHome);
+        });
+
+        // Setup the click event listener for Set Home:
+        // Set the control's home to the current Map center.
+        google.maps.event.addDomListener(setHomeUI, 'click', function() {
+          var newHome = map.getCenter();
+          control.setHome(newHome);
+        });
+      }
+	
+	var mediumToColor = {
+		oil: ["blue", "#asdfsb"],
+		pastel: ["green", "#asdfsb"],
+		tempera: ["orange", "#asdfsb"],
+		gesso: ["pink", "#asdfsb"],
+		mastie: ["purple", "#asdfsb"],
+		oilOnPaint: ["red", "#asdfsb"],
+		portrait: ["yellow", "#asdfsb"]
+	};
+	
+      function initialize() {
+        var mapDiv = document.getElementById('map_canvas');
+        var mapOptions = {
+          zoom: 3,
+          center: chicago,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        }
+        map = new google.maps.Map(mapDiv, mapOptions);
+
+        // Create the DIV to hold the control and
+        // call the HomeControl() constructor passing
+        // in this DIV.
+        var homeControlDiv = document.createElement('div');
+        var homeControl = new HomeControl(homeControlDiv, map, chicago);
+
+        homeControlDiv.index = 1;
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
+		
+		colorizeMediums();
+      }
+	  
+	  function colorizeMediums(){
+		var mediumEls = document.getElementById("medium-checks").getElementsByTagName('span');
+		for(var i = 0; i < mediumEls.length; i++){
+			if(!mediumEls[i].getAttribute('id')){}
+			else if(mediumEls[i].getAttribute('id') != "clickCheck"){
+				var pattern = /([a-zA-Z]+)Span/i;
+				var mediumArr = pattern.exec(mediumEls[i].getAttribute('id'));
+				var medium = mediumArr[1] + "";
+				alert(medium);
+				if(medium){
+					$("#" + mediumEls[i].getAttribute('id')).css('background-color', mediumToColor[medium][1]);
+					//alert("check");
+				}
+				
+			}
+		}
+	  }
+    </script>
+	
+	
+	<!--
+		JQUERY and relevent methods
+	-->
+	<link rel="stylesheet" href="js/jquery-ui/development-bundle/themes/base/jquery.ui.all.css">
+	<script src="js/jquery-ui/development-bundle/jquery-1.8.3.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.core.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.widget.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.mouse.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.slider.js"></script>
+	<link rel="stylesheet" href="js/jquery-ui/development-bundle/demos/demos.css">
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.effect.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.effect-drop.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.effect-explode.js"></script>
+	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.effect-slide.js"></script>
+	
+	<script>
+	var startYear = 1650;
+	var endYear = 1800;
+	
+	var markers = [];
+	
+	function createMarker(latlng, id, medium){
+		var marker = new google.maps.Marker({
+			map: map,
+			icon: mediumToColor[medium][0] + "_waypoint.png",
+			title: "test marker",
+			position: latlng
+		 });
+					 
+					 
+		google.maps.event.addListener(marker, 'click', function() {			 
+			map.setZoom(5);
+			map.setCenter(marker.getPosition());
+			update_piece(id);
+		 });
+					 
+		return marker;
+	}
+	
+	function update_piece(id) {
+		$.getJSON("/paintings/" + id + ".json", function(json){
+			if(json['success']){
+				document.getElementById("piece_html").innerHTML = "<img src='" + json['image'] + "' alt='mona lisa' />";
+				$( "#piece_div" ).css('visibility', 'visible');
+				runEffect("slide");
+			}
+		});
+	}
+	
+	function update_points() {
+		yearRangeArr = [startYear, endYear];
+		
+		mediumsArr = [];
+		checkBoxes = document.getElementById("medium-checks").getElementsByTagName('input');
+		for (var i=0; i<checkBoxes.length; i++) {
+			if(checkBoxes[i].checked){
+				mediumsArr.push(checkBoxes[i].id);
+			}
+		}
+		
+		if(mediumsArr.length == 0){
+			mediumsArr.push("None");
+		}
+		
+		$.getJSON("/pointUpdate",  {yearRange: yearRangeArr, mediums: mediumsArr}, function(json){
+			if(json['success']){
+				markers = [];
+				for(var i=0; i<json['pieces'].length; i++){
+					var piece = json['pieces'][i];
+					
+					markers[i] = createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['id'], piece['medium']);
+					 
+				}
+				/*$("#username_text").html(json['username']);*/
+			} else{
+				alert("something went wrong / no paintings returned");
+			}
+		});
+		
+	}
+	
+	function checkThis(boxName) {
+		boxEl = document.getElementById(boxName)
+		
+		if(boxEl.checked){
+			boxEl.checked = false;
+		} else{
+			boxEl.checked = true;
+		}
+	}
+	
+	$(function() {
+		$( "#slider-range" ).slider({
+			range: true,
+			min: 0,
+			max: 2012,
+			values: [ startYear, endYear ],
+			slide: function( event, ui ) {
+				$( "#years" ).val( ui.values[ 0 ] + "AD - " + ui.values[ 1 ] + "AD" );
+				startYear = ui.values[0];
+				endYear = ui.values[1];
+			}
+		});
+		$( "#years" ).val( $( "#slider-range" ).slider( "values", 0 ) +
+			"AD - " + $( "#slider-range" ).slider( "values", 1 ) + "AD" );
+	});
+	
+	function runEffect(selectedEffect) {
+
+			// most effect types need no options passed by default
+			var options = {};
+			// some effects have required parameters
+			if ( selectedEffect === "scale" ) {
+				options = { percent: 0 };
+			} else if ( selectedEffect === "transfer" ) {
+				options = { to: "#button", className: "ui-effects-transfer" };
+			} else if ( selectedEffect === "size" ) {
+				options = { to: { width: 200, height: 60 } };
+			}
+
+			// run the effect
+			$( "#piece_div" ).effect( selectedEffect, options, 500);
+	};
+	
+	// callback function to bring a hidden box back
+	function callback() {
+		setTimeout(function() {
+			$( "#piece_div" ).removeAttr( "style" ).hide().fadeIn();
+		}, 2000 );
+	};
+	
+	function closeDisplay(){
+		runEffect("drop");
+	}
+
+	</script>
+  </head>
+  <body onload="initialize()">
+    <div id="map_canvas" style="width:100%; height:100%"></div>
+	
+	<div id="input_div">
+		<p>
+		<label for="years">Year Range:</label>
+		<input type="text" id="years" style="border:0; color:#f6931f; font-weight:bold;" />
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="update_points();"> Update</button>
+		</p>
+
+		<div id="slider-range"></div><br/>
+		
+		<div id="medium-checks">
+			<span id="oilSpan" class="medSp"><input type="checkbox" id="oilOnPanel"><span class="clickCheck" onclick="checkThis('oilOnPanel')"> Oil on Panel</span></span>
+			<span id="pastelSpan" class="medSp"><input type="checkbox" id="pastel"><span class="clickCheck" onclick="checkThis('pastel')"> Pastel</span></span>
+			<span id="temperaSpan" class="medSp"><input type="checkbox" id="tempera"><span class="clickCheck" onclick="checkThis('tempera')"> Tempera</span></span>
+			<span id="gessoSpan" class="medSp"><input type="checkbox" id="gesso"><span class="clickCheck" onclick="checkThis('gesso')"> Gesso</span></span>
+			<span id="mastieSpan" class="medSp"><input type="checkbox" id="mastie" ><span class="clickCheck" onclick="checkThis('mastie')"> Mastie</span></span>
+			<span id="oilPaintSpan" class="medSp"><input type="checkbox" id="oilPaint"><span class="clickCheck" onclick="checkThis('oilPaint')"> Oil Paint</span></span>
+			<span id="portraitSpan" class="medSp"><input type="checkbox" id="portrait"><span class="clickCheck" onclick="checkThis('portrait')"> Portrait</span></span>
+		</div>
+	</div>
+	
+	<div id="piece_div" class="ui-widget-content ui-corner-all" >
+	<img id="display_close_button" src="button_grey_close.png" alt="Close display" onclick="closeDisplay()" height="20" width="20"/>
+	<span id="piece_html"></span></div>
+	
+  </body>
+</html>
