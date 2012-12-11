@@ -158,6 +158,13 @@ class PointUpdateHandler(BaseHandler):
             pieces.append(examplePiece2)
             pieces.append(examplePiece3)
             
+            examplePiece21 = {'id':19, 'lat':31.02, 'lng':26.5, 'medium':'pastel'}
+            examplePiece22 = {'id':19, 'lat':29.02, 'lng':26.5, 'medium':'pastel'}
+            examplePiece23 = {'id':19, 'lat':30.02, 'lng':25.5, 'medium':'pastel'}
+            pieces.append(examplePiece21)
+            pieces.append(examplePiece22)
+            pieces.append(examplePiece23)
+            
             if len(pieces) > 0:
                 responceDict["pieces"] = pieces
                 responceDict["success"] = True

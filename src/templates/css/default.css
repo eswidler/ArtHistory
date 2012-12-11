@@ -9,6 +9,7 @@ position: absolute;
 }
 
 #map_canvas {
+  top: 0px;
   height: 100%;
   z-index: 1;
 }
@@ -25,26 +26,47 @@ position: absolute;
 
 #input_div{
 	position: relative;
-	top: 120%;
+	top: 115%;
 	z-index: 2;
 	left: 20%;
 	width: 60%;
 }
 
 #piece_div{
+	bottom: 220px;
 	right: 20px;
-	width: 300px;
-	height: 450px;
+	width: 40%;
+	height: 60%;
 	background-color: #ffffff;
 	border: 1px solid black;
 	z-index: 2;
+	margin: 0px;
 	visibility:hidden;
+	-moz-box-shadow: 10px 10px 5px #888;
+	-webkit-box-shadow: 10px 10px 5px #888;
+	box-shadow: 10px 10px 5px #888;
+	overflow-y: hidden;
+	overflow-x: hidden;
+}
+
+#piece_html{
+	padding: 100px;
+	width: 90%;
+	height: 100%;
+	padding: 20px;
 }
 
 #display_close_button{
 	position: absolute;
 	right: 10px;
 	cursor: pointer;
+	width: 15px;
+	height: 15px;
+}
+
+#medium-checks{
+	position: relative;
+	bottom: 30px;
 }
 
 .clickCheck{
@@ -53,7 +75,44 @@ position: absolute;
 }
 
 .medSp{
-	height: 30px;
-	width: 60px;
+	height: 35px;
+	width: 70px;
 	background-color: #ffffff;
+	border: solid 1px black;
+	margin-right: 30px;
+}
+
+.medChk{
+	position: relative;
+	top: 3px;
+	cursor: pointer;
+}
+
+#mona_lisa{
+	width: 230px;
+	height: 300px;
+	float: left;
+	padding-right: 10px;
+}
+
+#slider-range .ui-slider-range { 
+	background: #858585; 
+}
+
+#slider-range{
+	width: 100%;
+}
+
+#timeline{
+	position: relative;
+	bottom: 20px;
+	right: 10px;
+	height: 75px;
+	/*width: 835px;*/
+	width: 104%;
+}
+
+#oilOnPanel{
+	position: relative;
+	top: 3px;
 }

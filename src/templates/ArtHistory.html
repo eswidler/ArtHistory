@@ -7,125 +7,47 @@
 	<!-- GOOGLE MAPS Initialization and functions
 	-->
     <script type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuO1airBjACG1H-kw53FisemvT6uxUGj0&sensor=false">
+      src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyBuO1airBjACG1H-kw53FisemvT6uxUGj0&sensor=false">
     </script>
     <script type="text/javascript">
 	  var map;
       var chicago = new google.maps.LatLng(41.850033, -87.6500523);
+      var pieceDisplayed = true;
 
-      /**
-       * The HomeControl adds a control to the map that
-       * returns the user to the control's defined home.
-       */
-
-      // Define a property to hold the Home state
-      HomeControl.prototype.home_ = null;
-
-      // Define setters and getters for this property
-      HomeControl.prototype.getHome = function() {
-        return this.home_;
-      }
-
-      HomeControl.prototype.setHome = function(home) {
-        this.home_ = home;
-      }
-
-      function HomeControl(controlDiv, map, home) {
-
-        // We set up a variable for this since we're adding
-        // event listeners later.
-        var control = this;
-
-        // Set the home property upon construction
-        control.home_ = home;
-
-        // Set CSS styles for the DIV containing the control
-        // Setting padding to 5 px will offset the control
-        // from the edge of the map
-        controlDiv.style.padding = '5px';
-
-        // Set CSS for the control border
-        var goHomeUI = document.createElement('div');
-        goHomeUI.style.backgroundColor = 'white';
-        goHomeUI.style.borderStyle = 'solid';
-        goHomeUI.style.borderWidth = '2px';
-        goHomeUI.style.cursor = 'pointer';
-        goHomeUI.style.textAlign = 'center';
-        goHomeUI.title = 'Click to set the map to Home';
-        controlDiv.appendChild(goHomeUI);
-
-        // Set CSS for the control interior
-        var goHomeText = document.createElement('div');
-        goHomeText.style.fontFamily = 'Arial,sans-serif';
-        goHomeText.style.fontSize = '12px';
-        goHomeText.style.paddingLeft = '4px';
-        goHomeText.style.paddingRight = '4px';
-        goHomeText.innerHTML = '<b>Home</b>';
-        goHomeUI.appendChild(goHomeText);
-
-        // Set CSS for the setHome control border
-        var setHomeUI = document.createElement('div');
-        setHomeUI.style.backgroundColor = 'white';
-        setHomeUI.style.borderStyle = 'solid';
-        setHomeUI.style.borderWidth = '2px';
-        setHomeUI.style.cursor = 'pointer';
-        setHomeUI.style.textAlign = 'center';
-        setHomeUI.title = 'Click to set Home to the current center';
-        controlDiv.appendChild(setHomeUI);
-
-        // Set CSS for the control interior
-        var setHomeText = document.createElement('div');
-        setHomeText.style.fontFamily = 'Arial,sans-serif';
-        setHomeText.style.fontSize = '12px';
-        setHomeText.style.paddingLeft = '4px';
-        setHomeText.style.paddingRight = '4px';
-        setHomeText.innerHTML = '<b>Set Home</b>';
-        setHomeUI.appendChild(setHomeText);
-
-        // Setup the click event listener for Home:
-        // simply set the map to the control's current home property.
-        google.maps.event.addDomListener(goHomeUI, 'click', function() {
-          var currentHome = control.getHome();
-          map.setCenter(currentHome);
-        });
-
-        // Setup the click event listener for Set Home:
-        // Set the control's home to the current Map center.
-        google.maps.event.addDomListener(setHomeUI, 'click', function() {
-          var newHome = map.getCenter();
-          control.setHome(newHome);
-        });
-      }
 	
 	var mediumToColor = {
-		oil: ["blue", "#asdfsb"],
-		pastel: ["green", "#asdfsb"],
-		tempera: ["orange", "#asdfsb"],
-		gesso: ["pink", "#asdfsb"],
-		mastie: ["purple", "#asdfsb"],
-		oilOnPaint: ["red", "#asdfsb"],
-		portrait: ["yellow", "#asdfsb"]
+		oil: ["blue", "#0198E1"],
+		pastel: ["green", "#4DBD33"],
+		tempera: ["orange", "#FF8000"],
+		gesso: ["pink", "#F6CCDA"],
+		mastie: ["purple", "#CD00CD"],
+		oilOnPaint: ["red", "#FF0000"],
+		portrait: ["yellow", "#FCD116"]
 	};
+
+	var centerLocation = new google.maps.LatLng(30, 355);
 	
       function initialize() {
         var mapDiv = document.getElementById('map_canvas');
         var mapOptions = {
           zoom: 3,
-          center: chicago,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
+          center: centerLocation,
+          mapTypeId: google.maps.MapTypeId.TERRAIN, 
+		  minZoom: 2,
+		  maxZoom: 8
         }
         map = new google.maps.Map(mapDiv, mapOptions);
 
-        // Create the DIV to hold the control and
-        // call the HomeControl() constructor passing
-        // in this DIV.
-        var homeControlDiv = document.createElement('div');
-        var homeControl = new HomeControl(homeControlDiv, map, chicago);
-
-        homeControlDiv.index = 1;
-        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
 		
 		colorizeMediums();
+
+		welcomeHTML = "<br/><h3>Welcome to the Art History Application</h3><br/>";
+		welcomeHTML += "<img id='mona_lisa' src='mona_lisa.jpg' alt='mona lisa' /><br/>"
+		welcomeHTML += "<p>Choose the year range and mediums of the pieces you want to see using the tools at the bottom of the screen.  Click update to update the markers on the map according to your preferences";
+		document.getElementById("piece_html").innerHTML = welcomeHTML;
+		$( "#piece_div" ).css('visibility', 'visible');
+		runEffect("slide");
+
       }
 	  
 	  function colorizeMediums(){
@@ -136,12 +58,10 @@
 				var pattern = /([a-zA-Z]+)Span/i;
 				var mediumArr = pattern.exec(mediumEls[i].getAttribute('id'));
 				var medium = mediumArr[1] + "";
-				alert(medium);
-				if(medium){
+				if(mediumToColor[medium]){
+					//alert(mediumToColor[medium][1]);
 					$("#" + mediumEls[i].getAttribute('id')).css('background-color', mediumToColor[medium][1]);
-					//alert("check");
 				}
-				
 			}
 		}
 	  }
@@ -168,13 +88,15 @@
 	var endYear = 1800;
 	
 	var markers = [];
+	var circles = [];
 	
-	function createMarker(latlng, id, medium){
+	function createMarker(latlng, id, medium, indexInMarkers){
 		var marker = new google.maps.Marker({
 			map: map,
 			icon: mediumToColor[medium][0] + "_waypoint.png",
 			title: "test marker",
-			position: latlng
+			position: latlng,
+			animation: google.maps.Animation.DROP
 		 });
 					 
 					 
@@ -183,23 +105,77 @@
 			map.setCenter(marker.getPosition());
 			update_piece(id);
 		 });
-					 
+					 		 
 		return marker;
 	}
 	
 	function update_piece(id) {
 		$.getJSON("/paintings/" + id + ".json", function(json){
 			if(json['success']){
-				document.getElementById("piece_html").innerHTML = "<img src='" + json['image'] + "' alt='mona lisa' />";
+				document.getElementById("piece_html").innerHTML = "<a href='" + json['image'] + "' target='_blank'><img src='" + json['image'] + "' alt='mona lisa' /></a>";
 				$( "#piece_div" ).css('visibility', 'visible');
 				runEffect("slide");
+				pieceDisplayed = true;
 			}
 		});
 	}
 	
-	function update_points() {
-		yearRangeArr = [startYear, endYear];
+	function getYearRangeArr(){
+		var el = document.getElementById('years');
 		
+		var pattern = /^([0-9]{1,4})(AD|BC)?\s?-\s?([0-9]{1,4})(AD|BC)?$/i;
+		var resultArr = pattern.exec(el.value);
+		
+		if(resultArr){
+			var lowerYear = parseInt(resultArr[1]);
+			var higherYear = parseInt(resultArr[3]);
+			
+			if ((lowerYear > higherYear  && resultArr[2] == "AD" && resultArr[4] == "AD") ||
+				(lowerYear < higherYear && resultArr[2] == "BC" && resultArr[4] == "BC")||
+				(resultArr[2] == "AD" && resultArr[4] == "BC")){
+				document.getElementById('inputYearError').innerHTML = "Minimum year (" + lowerYear + resultArr[2] + ") is higher then max year (" + higherYear + resultArr[4] + ")"
+				return false;
+			} else if(higherYear > new Date().getFullYear()){
+				document.getElementById('inputYearError').innerHTML = "Only years up to the current one (" + new Date().getFullYear() + ") are allowed.";
+				return false;
+			} else{
+				
+				if(resultArr[2] == "BC"){
+					lowerYear = lowerYear * -1;
+				}
+				if(resultArr[4] == "BC"){
+					higherYear = higherYear * -1;
+				}
+				$( "#slider-range" ).slider('values', 0, lowerYear);
+				$( "#slider-range" ).slider('values', 1, higherYear);
+				startYear = lowerYear;
+				endYear = higherYear;
+				document.getElementById('inputYearError').innerHTML = "";
+				return [lowerYear, higherYear];
+			}
+		}
+
+		document.getElementById('inputYearError').innerHTML = "Please format the year range in the form \"(year)AD - (year)AD\".";
+		return false;
+	}
+	
+	function update_points() {
+		yearRangeArr = getYearRangeArr();
+		if(!yearRangeArr){
+			//yearRangeArr = [startYear, endYear];
+			return;
+		}
+		
+		for(var i=0; i< markers.length; i++){
+			markers[i].setMap(null);
+		}
+		for(var i = 0; i < circles.length; i++){
+				circles[i].setMap(null);
+		}
+		markers = [];
+		circles = [];
+		
+		/**Get mediums that are checked **/
 		mediumsArr = [];
 		checkBoxes = document.getElementById("medium-checks").getElementsByTagName('input');
 		for (var i=0; i<checkBoxes.length; i++) {
@@ -207,26 +183,145 @@
 				mediumsArr.push(checkBoxes[i].id);
 			}
 		}
-		
 		if(mediumsArr.length == 0){
 			mediumsArr.push("None");
 		}
 		
+		/**Makes call to server with year range and mediums that are checked **/
 		$.getJSON("/pointUpdate",  {yearRange: yearRangeArr, mediums: mediumsArr}, function(json){
 			if(json['success']){
 				markers = [];
-				for(var i=0; i<json['pieces'].length; i++){
-					var piece = json['pieces'][i];
-					
-					markers[i] = createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['id'], piece['medium']);
-					 
+				var numPieces = json['pieces'].length;
+				for(var i=0; i<numPieces; i++){
+					setTimeout(function() {
+						var piece = json['pieces'].pop();
+						markers[markers.length]	= createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['id'], piece['medium'], i);
+						if(markers.length == numPieces){
+							determineCirclesMap();
+						}
+						}, i * 180);
 				}
-				/*$("#username_text").html(json['username']);*/
+				closeDisplay();
+				map.setZoom(3);
+				map.setCenter(centerLocation);
 			} else{
 				alert("something went wrong / no paintings returned");
 			}
 		});
 		
+	}
+
+	function determineCirclesMap(){
+		var markers2d = [];
+		var numCloseCircles = 1;
+		/*I believe this is 500 km*/
+		var closeDistance = 500000;
+		var foundNeighbor;
+		var marker;
+
+		// alert("checked " + markers.length);
+
+		for(var i =0; i < markers.length;i++){
+			marker = markers[i];
+			foundNeighbor = false;
+			for(var j =0; j < markers2d.length;j++){
+				for(var k = 0; k < markers2d[j].length;k++){
+					if(distance(marker, markers2d[j][k]) <= closeDistance && marker.getIcon() == markers2d[j][k].getIcon()){
+						markers2d[j].push(marker);
+						foundNeighbor = true;
+						break;
+						break;
+					}
+				}
+			}
+			if(!foundNeighbor){
+				markers2d.push([marker]);
+			}
+
+	    }
+	    for(var j = 0; j < markers2d.length;j++){
+	    	if(markers2d[j].length >= numCloseCircles){
+	    		determineCirclesReduce(markers2d[j]);
+	    	}
+	    }
+
+	}
+
+	function distance(mark1, mark2){
+		return google.maps.geometry.spherical.computeDistanceBetween(mark1.getPosition(), mark2.getPosition());
+	}
+
+	function determineCirclesReduce(markerArr){
+		var mark = markerArr[0];
+
+		var pattern = /^([a-zA-Z]+)\_waypoint\.png$/i;
+		var colorName = pattern.exec(mark.getIcon());
+		for (var key in mediumToColor) {
+		 	if(mediumToColor[key][0] == colorName[1]){
+		 		var color = mediumToColor[key][1];
+		 	}
+		}
+
+		var xArr = [];
+		var yArr = [];
+		var zArr = [];
+
+		for(var i = 0; i < markerArr.length; i++){
+			var point = markerArr[i].getPosition();
+			var latRad = point.lat() * (Math.PI / 180);
+			var lngRad = point.lng() * (Math.PI / 180);
+
+			xArr.push(Math.cos(latRad) * Math.cos(lngRad));
+			yArr.push(Math.cos(latRad) * Math.sin(lngRad));
+			zArr.push(Math.sin(latRad));
+		}
+
+		
+		var X = 0;
+		var Y = 0;
+		var Z = 0;
+
+		for(var i = 0; i < xArr.length; i++){
+			X += xArr[i];
+		}
+		for(var i = 0; i < yArr.length; i++){
+			Y += yArr[i];
+		}
+		for(var i = 0; i < zArr.length; i++){
+			Z += zArr[i];
+		}
+
+		var lng = Math.atan2(Y, X);
+		var hyp = Math.sqrt(X * X + Y * Y);
+		var lat = Math.atan2(Z, hyp);
+
+
+		lat = lat * (180/Math.PI);
+		lng = lng * (180/Math.PI);
+		var geographicMidpoint = new google.maps.LatLng(lat, lng);
+
+		var radius = 0;
+		for(var i = 0; i < markerArr.length; i++){
+			var distance =	google.maps.geometry.spherical.computeDistanceBetween(geographicMidpoint, markerArr[i].getPosition());
+			if(distance > radius){
+				radius = distance;
+			}
+		}
+		radius += 100000;
+
+		 var circleOptions = {
+            strokeColor: color,
+            strokeOpacity: 0.2,
+            strokeWeight: 2,
+            fillColor: color,
+            fillOpacity: 0.15,
+            map: map,
+            center: geographicMidpoint,
+            radius: radius
+          };
+
+
+          circles.push(new google.maps.Circle(circleOptions));
 	}
 	
 	function checkThis(boxName) {
@@ -236,24 +331,43 @@
 			boxEl.checked = false;
 		} else{
 			boxEl.checked = true;
+
 		}
 	}
 	
 	$(function() {
 		$( "#slider-range" ).slider({
 			range: true,
-			min: 0,
-			max: 2012,
+			min: -300,
+			max: new Date().getFullYear(),
 			values: [ startYear, endYear ],
 			slide: function( event, ui ) {
-				$( "#years" ).val( ui.values[ 0 ] + "AD - " + ui.values[ 1 ] + "AD" );
-				startYear = ui.values[0];
-				endYear = ui.values[1];
+				sliderEventFunction();
 			}
 		});
 		$( "#years" ).val( $( "#slider-range" ).slider( "values", 0 ) +
 			"AD - " + $( "#slider-range" ).slider( "values", 1 ) + "AD" );
 	});
+	
+	function sliderEventFunction(){
+		var values = $( "#slider-range" ).slider("option", "values");
+		var strOut = "";
+		if(values[ 0 ] < 0){
+			strOut = values[ 0 ] * -1 + "BC - ";
+		} else{
+			strOut = values[ 0 ] + "AD - ";
+		}
+		if(values [ 1 ] < 0){
+			strOut += values[ 1 ] * -1 + "BC";
+		} else {
+			strOut += values[ 1 ] + "AD";
+		}
+
+		$( "#years" ).val(strOut);
+		startYear = values[0];
+		endYear = values[1];
+
+	}
 	
 	function runEffect(selectedEffect) {
 
@@ -280,8 +394,18 @@
 	};
 	
 	function closeDisplay(){
-		runEffect("drop");
+		if(pieceDisplayed){
+			runEffect("drop");
+			pieceDisplayed = false;
+		} 
 	}
+
+	function checkForEnter(e) {
+	    if (e.keyCode == 13) {
+	       update_points();
+	    }
+	}
+	
 
 	</script>
   </head>
@@ -291,26 +415,28 @@
 	<div id="input_div">
 		<p>
 		<label for="years">Year Range:</label>
-		<input type="text" id="years" style="border:0; color:#f6931f; font-weight:bold;" />
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="update_points();"> Update</button>
+		<input type="text" id="years" style="border:0; font-weight:bold;" onkeyup="checkForEnter(event)" />
+		<span id="inputYearError" style="color: red; font-size:120%"></span>
+		<button onclick="update_points();" style="border:1px solid black; float: right; cursor:pointer;"> Update</button>
 		</p>
 
 		<div id="slider-range"></div><br/>
 		
-		<div id="medium-checks">
-			<span id="oilSpan" class="medSp"><input type="checkbox" id="oilOnPanel"><span class="clickCheck" onclick="checkThis('oilOnPanel')"> Oil on Panel</span></span>
-			<span id="pastelSpan" class="medSp"><input type="checkbox" id="pastel"><span class="clickCheck" onclick="checkThis('pastel')"> Pastel</span></span>
-			<span id="temperaSpan" class="medSp"><input type="checkbox" id="tempera"><span class="clickCheck" onclick="checkThis('tempera')"> Tempera</span></span>
-			<span id="gessoSpan" class="medSp"><input type="checkbox" id="gesso"><span class="clickCheck" onclick="checkThis('gesso')"> Gesso</span></span>
-			<span id="mastieSpan" class="medSp"><input type="checkbox" id="mastie" ><span class="clickCheck" onclick="checkThis('mastie')"> Mastie</span></span>
-			<span id="oilPaintSpan" class="medSp"><input type="checkbox" id="oilPaint"><span class="clickCheck" onclick="checkThis('oilPaint')"> Oil Paint</span></span>
-			<span id="portraitSpan" class="medSp"><input type="checkbox" id="portrait"><span class="clickCheck" onclick="checkThis('portrait')"> Portrait</span></span>
+		<img id='timeline' src='timeline.png' alt='Timeline Image' /><br/>
+		<<div id="medium-checks">
+			<span id="oilSpan" class="medSp"><input type="checkbox" class='medChk' id="oilOnPanel"><span class="clickCheck" onclick="checkThis('oilOnPanel')" > Oil on Panel</span></span>
+			<span id="pastelSpan" class="medSp"><input type="checkbox" class="medChk" id="pastel"><span class="clickCheck" onclick="checkThis('pastel')"> Pastel</span></span>
+			<span id="temperaSpan" class="medSp"><input type="checkbox" class="medChk" id="tempera"><span class="clickCheck" onclick="checkThis('tempera')"> Tempera</span></span>
+			<span id="gessoSpan" class="medSp"><input type="checkbox" class="medChk" id="gesso"><span class="clickCheck" onclick="checkThis('gesso')"> Gesso</span></span>
+			<span id="mastieSpan" class="medSp"><input type="checkbox" class="medChk" id="mastie" ><span class="clickCheck" onclick="checkThis('mastie')"> Mastie</span></span>
+			<span id="oilOnPaintSpan" class="medSp"><input type="checkbox" class="medChk" id="oilPaint"><span class="clickCheck" onclick="checkThis('oilPaint')"> Oil Paint</span></span>
+			<span id="portraitSpan" class="medSp"><input type="checkbox" class="medChk" id="portrait"><span class="clickCheck" onclick="checkThis('portrait')"> Portrait</span></span>
 		</div>
 	</div>
 	
 	<div id="piece_div" class="ui-widget-content ui-corner-all" >
-	<img id="display_close_button" src="button_grey_close.png" alt="Close display" onclick="closeDisplay()" height="20" width="20"/>
-	<span id="piece_html"></span></div>
+	<img id="display_close_button" src="close.png" alt="Close display" onclick="closeDisplay()" height="11" width="11"/>
+	<div id="piece_html"></div></div>
 	
   </body>
 </html>
