@@ -135,6 +135,7 @@ class PaintingHandler(BaseHandler):
             paintingDict= dict(d1, **painting)
             #exampleDict = {'success': True, 'image': 'http://images.wikia.com/central/images/e/eb/250px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'}
             self.write(paintingDict)
+            #self.write(exampleDict)
         elif format in mappings:
             content_type=mappings[format]
             self.set_header("Content-Type",content_type)
@@ -174,28 +175,28 @@ class PointUpdateHandler(BaseHandler):
         
         if yearRange is None or mediums is None:
             responceDict["error"] = "Incorrect GET arguments provided"
-            
-            
+                
         else:
             """Need new set of points, their geocoordinates, painting ID, and possibly medium for
             map coloration purposes """
             
-            pieces = []
+            pieces= self.db.filter(yearRange,mediums)
+            #pieces = []
             
-            examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
-            examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece3 = {'id':83, 'lat':65.02, 'lng':73.5, 'medium':'gesso'}
+            #examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
+            #examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
+            #examplePiece3 = {'id':83, 'lat':65.02, 'lng':73.5, 'medium':'gesso'}
             
-            pieces.append(examplePiece1)
-            pieces.append(examplePiece2)
-            pieces.append(examplePiece3)
+            #pieces.append(examplePiece1)
+            #pieces.append(examplePiece2)
+            #pieces.append(examplePiece3)
             
-            examplePiece21 = {'id':19, 'lat':31.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece22 = {'id':19, 'lat':29.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece23 = {'id':19, 'lat':30.02, 'lng':25.5, 'medium':'pastel'}
-            pieces.append(examplePiece21)
-            pieces.append(examplePiece22)
-            pieces.append(examplePiece23)
+            #examplePiece21 = {'id':19, 'lat':31.02, 'lng':26.5, 'medium':'pastel'}
+            #examplePiece22 = {'id':19, 'lat':29.02, 'lng':26.5, 'medium':'pastel'}
+            #examplePiece23 = {'id':19, 'lat':30.02, 'lng':25.5, 'medium':'pastel'}
+            #pieces.append(examplePiece21)
+            #pieces.append(examplePiece22)
+            #pieces.append(examplePiece23)
             
             if len(pieces) > 0:
                 responceDict["pieces"] = pieces
@@ -216,8 +217,12 @@ class PaintingDatabase(object):
         f.close()
         results= json.loads(paintings)
         self.paintings={}
+        self.mediums=[]
         for painting in results:
             self.paintings[painting["_id"]]=painting
+            if "medium" in painting:
+            	if painting["medium"] not in self.mediums:
+            		self.mediums.append(painting["medium"])
         
     # CRUD operations
     
@@ -238,6 +243,25 @@ class PaintingDatabase(object):
         """Returns data about a painting"""
         painting= self.paintings[int(paintingID)]
         return painting
+        
+    def filter(self,yearRange,mediums):
+    	"""Returns paintings that fit the given yearRange and mediums"""
+    	results=[]
+    	for painting in self.paintings.values():
+    		valid= True
+    		print painting["year_created"]
+    		print painting["year_created"]< yearRange[0]
+    		if "year_created" in painting:
+    			if int(painting["year_created"])> int(yearRange[1]) or int(painting["year_created"])< int(yearRange[0]):
+    				valid= False
+    		if "medium" in painting:
+    				if painting["medium"] not in mediums:
+    					valid= False
+    		if valid:
+    			results.append(painting)
+    		print valid
+    	print results
+    	return results
                     
 ### Script entry point ###
 
@@ -253,7 +277,7 @@ def main():
         http_server.listen(options.port)
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
-        print "\nStopping service gracefull..."
+        print "\nStopping service gracefully..."
     finally:
         tornado.ioloop.IOLoop.instance().stop()
 
