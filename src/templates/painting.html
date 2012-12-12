@@ -1,0 +1,32 @@
+<html>
+	<body>
+		<div itemscope itemtype="http://schema.org/Painting">
+		{% if 'title' in painting %}
+			<h3 itemprop="name">{{painting['title']}}</h3>
+		{% end %}
+		{% if 'artist' in painting %}
+		<div> Artist: <span itemprop="author">{{painting['artist']}}</span> </div>
+		{% end %}
+		{% if 'year_created' in painting %}
+		<div> Date Created: <span itemprop="dateCreated">{{painting['year_created']}}</span></div>
+		{% end %}
+		{% if 'medium' in painting %}
+		<div>Medium: <span>{{painting['medium']}}</span> </div>
+		{% end %}
+		<div itemprop="contentLocation">
+			{% if 'where' in painting %}
+			<div>Location: <span>{{painting['where']}}</span></div>
+			{% end %}
+			{% if 'lat' in painting %}
+			<div>Latitude: <span>{{painting['lat']}}</span></div>
+			{% end %}
+			{% if 'lng' in painting %}
+			<div>Longitude: <span>{{painting['lng']}}</span></div>
+			{% end %}
+		</div>
+		{% if 'description' in painting %}
+		<div>Description: <span itemprop= "description">{{painting['description']}}</description></div>
+		{% end %}
+		</div>
+	</body>
+</html>
