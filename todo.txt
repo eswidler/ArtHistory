@@ -1,0 +1,5 @@
+FrontEnd:
+-Format html div for viewing piece/information on piece
+-Intro and demo popup
+-Overlays for coloration
+-
