@@ -125,7 +125,7 @@ class AllPaintingsHandler(BaseHandler):
     
 #Gets info on specific painting
 class PaintingHandler(BaseHandler):
-    SUPPORTED_METHODS = ("PUT", "GET", "DELETE")
+    SUPPORTED_METHODS = ("PUT", "GET", "DELETE","POST")
     
     def get(self, paintingID, format):
         painting= self.db.get_painting(paintingID)
@@ -159,14 +159,18 @@ class PaintingHandler(BaseHandler):
             new_painting = json.loads(self.request.body)
             self.db.update_painting(paintingID, new_painting[1])
         else:
-        	self.write_error(404,message="Painting %s does not exist" %paintingID)
+            self.write_error(404,message="Painting %s does not exist" %paintingID)
             
     def delete(self, paintingID, format):
         if paintingID in self.db.movies:
             print "Deleting painting %s" % paintingID
             self.db.delete_painting(paintingID)
         else:
-        	self.write_error(404, message="Painting %s does not exist" %paintingID)
+            self.write_error(404, message="Painting %s does not exist" %paintingID)
+            
+    def post(self,format):
+    	new_painting = json.loads(self.request.body)
+    	new_id = self.db.create_painting(new_painting[1])
     
 
 class CSSHandler(BaseHandler):
@@ -207,22 +211,6 @@ class PointUpdateHandler(BaseHandler):
             map coloration purposes """
             
             pieces= self.db.filter(yearRange,mediums)
-            #pieces = []
-            
-            #examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
-            #examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
-            #examplePiece3 = {'id':83, 'lat':65.02, 'lng':73.5, 'medium':'gesso'}
-            
-            #pieces.append(examplePiece1)
-            #pieces.append(examplePiece2)
-            #pieces.append(examplePiece3)
-            
-            #examplePiece21 = {'id':19, 'lat':31.02, 'lng':26.5, 'medium':'pastel'}
-            #examplePiece22 = {'id':19, 'lat':29.02, 'lng':26.5, 'medium':'pastel'}
-            #examplePiece23 = {'id':19, 'lat':30.02, 'lng':25.5, 'medium':'pastel'}
-            #pieces.append(examplePiece21)
-            #pieces.append(examplePiece22)
-            #pieces.append(examplePiece23)
             
             if len(pieces) > 0:
                 responceDict["pieces"] = pieces
@@ -271,16 +259,19 @@ class PaintingDatabase(object):
         return painting
     
     def update_painting(self, paintingID, painting):
-    	"""Updates a painting with a given id"""
+        """Updates a painting with a given id"""
         self.paintings[paintingID] = painting
         
-	def delete_painting(self, paintingID):
-	   """Deletes a movie and references to this movie"""
-	   del self.paintings[paintingID]
-	   for actor in self.actors.values():
-			if movie_id in actor['movies']:
-				print "Deleting movie reference from actor %s" % actor['id']
-				actor['movies'].remove(movie_id)
+    def delete_painting(self, paintingID):
+    	"""Deletes a painting"""
+        del self.paintings[paintingID]
+        
+	def create_painting(self, painting):
+		"""Creates a new painting and returns the assigned ID"""
+		max_id = sorted([int(paintingID) for paintingID in self.paintings])[-1]
+		new_id = str(max_id + 1)
+		self.paintings[new_id] = painting
+		return new_id
 
         
     # extra functions
@@ -303,7 +294,6 @@ class PaintingDatabase(object):
                     
             if valid:
                 results.append(painting)
-        print results
         return results
                     
 ### Script entry point ###
