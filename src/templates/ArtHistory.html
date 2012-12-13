@@ -195,7 +195,7 @@
 				for(var i=0; i<numPieces; i++){
 					setTimeout(function() {
 						var piece = json['pieces'].pop();
-						markers[markers.length]	= createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['id'], piece['medium'], i);
+						markers[markers.length]	= createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['_id'], piece['medium'], i);
 						if(markers.length == numPieces){
 							determineCirclesMap();
 						}

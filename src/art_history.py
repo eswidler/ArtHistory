@@ -13,6 +13,7 @@ import codecs
 import json
 import re
 import urlparse
+import urllib
 
 import tornado.httpserver
 import tornado.ioloop
@@ -70,7 +71,7 @@ class ArtHistory(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, **settings)
         self.db = db
         print "Webservice Started..."
-        
+
 class BaseHandler(tornado.web.RequestHandler):
     """Functions common to all handlers"""
     @property
@@ -83,11 +84,19 @@ class BaseHandler(tornado.web.RequestHandler):
         protocol = self.request.protocol
         host = self.request.headers.get('Host')
         return protocol + "://" + host
+    
+    def get_format(self):
+        #returns format for redirect from accept header
+        mappings= {"text/html":".html","application/json":".json","application/xml":".xml","text/turtle":".ttl"}
+        accept= self.request.headers['Accept']
+        for format in mappings:
+            if format in accept:
+                return mappings[format]
+        return ""
         
     def write_error(self, status_code, **kwargs):
         """Attach human-readable msg to error messages"""
         self.finish("Error %d - %s" % (status_code, kwargs['message']))
-    
 
 class HomeHandler(BaseHandler):
     def get(self):
@@ -97,19 +106,60 @@ class HomeHandler(BaseHandler):
         #self.write("<html><body><h1>Art History</h1><p>just an example of outputting html</p></body></html>")
 
 #Gets info on all paintings
-#Check here for paramaters for range and mediums
 class AllPaintingsHandler(BaseHandler):
-    def get(self):
-        pass
+    def get(self,format):
+        paintings= self.db.list_paintings(self.base_uri)
+        mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
+        if format is None:
+            fmt= self.get_format()
+            self.redirect("/paintings"+fmt,status=303)
+        elif format == ".json":
+            self.write(dict(paintings=paintings))
+        elif format in mappings:
+            content_type=mappings[format]
+            self.set_header("Content-Type", content_type)
+            self.render("paintings"+format, paintings=paintings)
+        else:
+            self.write_error(401, message="Format %s not supported" % format)
     
 #Gets info on specific painting
 class PaintingHandler(BaseHandler):
+	SUPPORTED_METHODS = ("PUT", "GET", "DELETE")
+	
     def get(self, paintingID, format):
-        if format == ".json":
-            exampleDict = {'success': True, 'image': 'http://images.wikia.com/central/images/e/eb/250px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'}
-            self.write(exampleDict)
+        painting= self.db.get_painting(paintingID)
+        mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
+        painting['success']=True
+        if format is None:
+            fmt= self.get_format()
+            self.redirect("/paintings/%s" %paintingID +fmt, status=303)
+        elif format == ".json":
+            #d1 = {'success': True}
+            #paintingDict= dict(d1, **painting)
+            self.write(painting)
+        elif format in mappings:
+            content_type=mappings[format]
+            self.set_header("Content-Type",content_type)
+            self.render("painting"+format,painting=painting)
+        else:
+            self.write_error(401, message="Format %s not supported" % format)
             
+    def put(self, paintingID, format):
+        if paintingID in self.db.paintings:
+            print "Updating painting %s" % paintingID
+            new_painting = json.loads(self.request.body)
+            self.db.update_painting(paintingID, new_painting[1])
+        else:
+        	self.write_error(404,message="Painting %s does not exist" %paintingID)
+            
+    def delete(self, paintingID, format):
+        if paintingID in self.db.movies:
+            print "Deleting painting %s" % paintingID
+            self.db.delete_painting(paintingID)
+        else:
+        	self.write_error(404, message="Painting %s does not exist" %paintingID)
     
+
 class CSSHandler(BaseHandler):
     def get(self, fileName):
         self.set_header("Content-Type", "text/css")
@@ -142,28 +192,28 @@ class PointUpdateHandler(BaseHandler):
         
         if yearRange is None or mediums is None:
             responceDict["error"] = "Incorrect GET arguments provided"
-            
-            
+                
         else:
             """Need new set of points, their geocoordinates, painting ID, and possibly medium for
             map coloration purposes """
             
-            pieces = []
+            pieces= self.db.filter(yearRange,mediums)
+            #pieces = []
             
-            examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
-            examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece3 = {'id':83, 'lat':65.02, 'lng':73.5, 'medium':'gesso'}
+            #examplePiece1 = {'id':27, 'lat':47.02, 'lng':83.5, 'medium':'oil'}
+            #examplePiece2 = {'id':19, 'lat':30.02, 'lng':26.5, 'medium':'pastel'}
+            #examplePiece3 = {'id':83, 'lat':65.02, 'lng':73.5, 'medium':'gesso'}
             
-            pieces.append(examplePiece1)
-            pieces.append(examplePiece2)
-            pieces.append(examplePiece3)
+            #pieces.append(examplePiece1)
+            #pieces.append(examplePiece2)
+            #pieces.append(examplePiece3)
             
-            examplePiece21 = {'id':19, 'lat':31.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece22 = {'id':19, 'lat':29.02, 'lng':26.5, 'medium':'pastel'}
-            examplePiece23 = {'id':19, 'lat':30.02, 'lng':25.5, 'medium':'pastel'}
-            pieces.append(examplePiece21)
-            pieces.append(examplePiece22)
-            pieces.append(examplePiece23)
+            #examplePiece21 = {'id':19, 'lat':31.02, 'lng':26.5, 'medium':'pastel'}
+            #examplePiece22 = {'id':19, 'lat':29.02, 'lng':26.5, 'medium':'pastel'}
+            #examplePiece23 = {'id':19, 'lat':30.02, 'lng':25.5, 'medium':'pastel'}
+            #pieces.append(examplePiece21)
+            #pieces.append(examplePiece22)
+            #pieces.append(examplePiece23)
             
             if len(pieces) > 0:
                 responceDict["pieces"] = pieces
@@ -171,94 +221,83 @@ class PointUpdateHandler(BaseHandler):
             
         self.write(responceDict)
         
-            
-#UC1: Retrieve a list of all actors
-class ActorListHandler(BaseHandler):
-    def get(self, format):
-        actors = self.db.list_actors(self.base_uri, None)
-        if format is None:
-            self.redirect("/actors.json")
-        elif format == ".xml":
-            self.set_header("Content-Type", "application/xml")
-            self.render("actor_list.xml", actors=actors)
-        elif format == ".json":
-            self.write(dict(actors=actors))
-        else:
-            self.write_error(401, message="Format %s not supported" % format)
-            
 
-
-### A dummy in-memory database implementation; feel free to reuse it or
-### implement your own
-
-class MovieDatabase(object):
-    """A dummy in-memory database for handling movie data."""
-    def __init__(self, movies_csv, actors_csv, mapping_csv):
-        print "Loading data into memory...."
-        '''mapping_data = self.read_from_csv(mapping_csv)
-        movie_data = self.read_from_csv(movies_csv)
-        actor_data = self.read_from_csv(actors_csv)
-        self.movies = {}
-        for movie in movie_data:
-            self.movies[movie['id']] = movie
-            actors = [actor['actor_id'] for actor in mapping_data
-                            if actor['movie_id'] == movie['id']]
-            self.movies[movie['id']]['actors'] = actors
-        self.actors = {}
-        for actor in actor_data:
-            self.actors[actor['id']] = actor
-            movies = [movie['movie_id'] for movie in mapping_data
-                            if movie['actor_id'] == actor['id']]
-            self.actors[actor['id']]['movies'] = movies'''
+class PaintingDatabase(object):
+    """in memory database of MongoLab paintings database"""
+    def __init__(self):
+        #pull in full paintings collection from MongoLab
+        self.apikey= "?apiKey=50c72d32e4b067a576ea9bbf"
+        self.fixedURL= "https://api.mongolab.com/api/1/databases/art_history/collections/paintings"
+        url = self.fixedURL + self.apikey
+        f= urllib.urlopen(url)
+        paintings = f.read()
+        f.close()
+        results= json.loads(paintings)
+        self.paintings={}
+        self.mediums=[]
+        for painting in results:
+            self.paintings[painting["_id"]]=painting
+            if "medium" in painting:
+                if painting["medium"] not in self.mediums:
+                    self.mediums.append(painting["medium"])
         
-    # ACTOR CRUD operations
+    # CRUD operations
     
-    def list_actors(self, base_uri, movie_id):
-        """Returns a list of actors with IDs converted to URIs"""
-        if movie_id is None:
-            actors = self.actors.values()
-        else:
-            actors = [actor for actor in self.actors.values()
-                            if movie_id in actor['movies']]
+    def list_paintings(self,base_uri):
+        """Returns a list of all paintings"""
+        paintings=[]
+        for value in self.paintings.values():
+            painting= dict(value)
+            id= painting["_id"]
+            uri= base_uri +"/paintings/"+str(id)
+            del painting["_id"]
+            painting["uri"]=uri 
+            paintings.append(painting)
+        return paintings
+    
+    
+    def get_painting(self, paintingID):
+        """Returns data about a painting"""
+        painting= self.paintings[int(paintingID)]
+        return painting
+    
+    def update_painting(self, paintingID, painting):
+    	"""Updates a painting with a given id"""
+        self.paintings[paintingID] = painting
         
-            
-        actor_list = []
-        for actor in actors:
-            entry = {}
-            entry['uri'] = base_uri + "/actors/" + actor['id']
-            if actor.has_key('name'):
-                entry['name'] = actor['name']
-            actor_list.append(entry)
-        return actor_list
-    
-    
-    # Data import
-    
-    def read_from_csv(self, csv_file):
-        """Reads CSV entries into a list containing a set of dictionaries.
-        CSV header row entries are taken as dictionary keys"""
-        data = []
-        with codecs.open(csv_file, 'r', encoding='utf-8') as csvfile:
-            header = None
-            for i, line in enumerate(csvfile):
-                line_split = [x.strip() for x in line.split("|")]
-                line_data = [x for x in line_split if len(x) > 0]
-                if i == 0:
-                    header = line_data
-                else:
-                    entry = {}
-                    for i,datum in enumerate(line_data):
-                        entry[header[i]] = datum
-                    data.append(entry)
-        print "Loaded %d entries from %s" % (len(data), csv_file)
-        return data
+	def delete_painting(self, paintingID):
+	"""Deletes a movie and references to this movie"""
+		del self.paintings[paintingID]
+		for actor in self.actors.values():
+			if movie_id in actor['movies']:
+				print "Deleting movie reference from actor %s" % actor['id']
+				actor['movies'].remove(movie_id)
+
+        
+    # extra functions
+        
+    def filter(self,yearRange,mediums):
+        """Returns paintings that fit the given yearRange and mediums"""
+        results=[]
+        for painting in self.paintings.values():
+            valid= True
+            if "year_created" in painting:
+                if int(painting["year_created"])> int(yearRange[1]) or int(painting["year_created"])< int(yearRange[0]):
+                    valid= False
+            if "medium" in painting:
+                    if painting["medium"] not in mediums:
+                        valid= False
+            if valid:
+                results.append(painting)
+        print results
+        return results
                     
 ### Script entry point ###
 
 def main():
     tornado.options.parse_command_line()
     # Set up the database
-    db = MovieDatabase(options.movies, options.actors, options.mappings)
+    db = PaintingDatabase()
     # Set up the Web application, pass the database
     art_webservice = ArtHistory(db)
     # Set up HTTP server, pass Web application
@@ -267,7 +306,7 @@ def main():
         http_server.listen(options.port)
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
-        print "\nStopping service gracefull..."
+        print "\nStopping service gracefully..."
     finally:
         tornado.ioloop.IOLoop.instance().stop()
 

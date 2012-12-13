@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<painting>
+  {% if 'title' in painting %}
+	<title>{{painting['title']}}</title>
+  {% end %}
+  {% if 'image' in painting %}
+  	<img_url>{{painting['image']}}</img_url>
+  {% end %}
+  {% if 'artist' in painting %}
+	<artist>{{painting['artist']}}</artist>
+  {% end %}
+  {% if 'year_created' in painting %}
+	<year_created>{{painting['year_created']}}</year_created>
+  {% end %}
+  {% if 'medium' in painting %}
+	<medium>{{painting['medium']}}</medium>
+  {% end %}
+	<where>
+	  {% if 'where' in painting %}
+		<location>{{painting['where']}}</location>
+	  {% end %}
+	  {% if 'lat' in painting %}
+		<lat>{{painting['lat']}}</lat>
+	  {% end %}
+	  {% if 'lng' in painting %}
+		<lng>{{painting['lng']}}</lng>
+	  {% end %}
+	</where>
+  {% if 'description' in painting %}
+	<description>{{painting['description']}}</description>
+  {% end %}
+</painting>
