@@ -155,7 +155,7 @@
 			}
 		}
 
-		document.getElementById('inputYearError').innerHTML = "Please format the year range in the form \"(year)AD - (year)AD\".";
+		document.getElementById('inputYearError').innerHTML = "Please format the year range in the form \"(year)AD/BC - (year)AD/BC\".";
 		return false;
 	}
 	
@@ -412,7 +412,7 @@
   <body onload="initialize()">
     <div id="map_canvas" style="width:100%; height:100%"></div>
 	
-	<div id="input_div"><div id="input_background"></div>
+	<div id="input_div">
 		<p>
 		<label for="years">Year Range:</label>
 		<input type="text" id="years" style="border:0; font-weight:bold;" onkeyup="checkForEnter(event)" />
@@ -423,7 +423,7 @@
 		<div id="slider-range"></div><br/>
 		
 		<img id='timeline' src='timeline.png' alt='Timeline Image' /><br/>
-		<<div id="medium-checks">
+		<div id="medium-checks">
 			<span id="oilSpan" class="medSp"><input type="checkbox" class='medChk' id="oilOnPanel"><span class="clickCheck" onclick="checkThis('oilOnPanel')" > Oil on Panel</span></span>
 			<span id="pastelSpan" class="medSp"><input type="checkbox" class="medChk" id="pastel"><span class="clickCheck" onclick="checkThis('pastel')"> Pastel</span></span>
 			<span id="temperaSpan" class="medSp"><input type="checkbox" class="medChk" id="tempera"><span class="clickCheck" onclick="checkThis('tempera')"> Tempera</span></span>

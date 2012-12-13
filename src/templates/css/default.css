@@ -83,6 +83,7 @@ position: absolute;
 	position: relative;
 	bottom: 30px;
 	margin: 0px;
+	text-align: center;
 }
 
 .clickCheck{
@@ -116,7 +117,9 @@ position: absolute;
 }
 
 #slider-range{
-	width: 100%;
+	width: 101%;
+	position: relative;
+	left: 6px;
 }
 
 #timeline{
