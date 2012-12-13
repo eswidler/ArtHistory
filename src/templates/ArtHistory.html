@@ -16,13 +16,21 @@
 
 	
 	var mediumToColor = {
-		oil: ["blue", "#0198E1"],
+		oilPainting: ["blue", "#0198E1", "Oil painting"],
+		temperaOnPanel: ["green", "#4DBD33", "Tempera on panel"],
+		oilAndPaperOnCanvas: ["orange", "#FF8000", "Oil and paper on canvas"],
+		fresco: ["pink", "#F6CCDA", "Fresco"],
+		acrylicPaint: ["purple", "#CD00CD", "Acrylic paint"],
+		oilOnCanvas: ["red", "#FF0000", "Oil on canvas"],
+		other: ["yellow", "#FCD116", "other"]
+
+		/*oil: ["blue", "#0198E1"],
 		pastel: ["green", "#4DBD33"],
 		tempera: ["orange", "#FF8000"],
 		gesso: ["pink", "#F6CCDA"],
 		mastie: ["purple", "#CD00CD"],
-		oilOnPaint: ["red", "#FF0000"],
-		portrait: ["yellow", "#FCD116"]
+		oilPaint: ["red", "#FF0000"],
+		portrait: ["yellow", "#FCD116"]*/
 	};
 
 	var centerLocation = new google.maps.LatLng(30, 355);
@@ -33,17 +41,20 @@
           zoom: 3,
           center: centerLocation,
           mapTypeId: google.maps.MapTypeId.TERRAIN, 
+          mapTypeControlOptions: {
+      		mapTypeIds: []
+   		 },
 		  minZoom: 2,
-		  maxZoom: 8
+		  maxZoom: 9
         }
         map = new google.maps.Map(mapDiv, mapOptions);
 
 		
 		colorizeMediums();
 
-		welcomeHTML = "<br/><h3>Welcome to the Art History Application</h3><br/>";
-		welcomeHTML += "<img id='mona_lisa' src='mona_lisa.jpg' alt='mona lisa' /><br/>"
-		welcomeHTML += "<p>Choose the year range and mediums of the pieces you want to see using the tools at the bottom of the screen.  Click update to update the markers on the map according to your preferences";
+		welcomeHTML = "<div style='font-size:110%;'<br/><h3>Welcome to the Art History Application</h3><br/>";
+		welcomeHTML += "<img id='mona_lisa' src='mona_lisa.jpg' alt='mona lisa' /><br/>";
+		welcomeHTML += "<p>Choose the year range and mediums of the pieces you want to see using the tools at the bottom of the screen.  You can also type in the year range manually instead of using the slider.  Please keep in mind some higher resolution photos might take a few seconds to load.</p><br/><p>Click the update button to get new markers on the map according to your preferences.</p></div>";
 		document.getElementById("piece_html").innerHTML = welcomeHTML;
 		$( "#piece_div" ).css('visibility', 'visible');
 		runEffect("slide");
@@ -84,24 +95,45 @@
 	<script src="js/jquery-ui/development-bundle/ui/jquery.ui.effect-slide.js"></script>
 	
 	<script>
-	var startYear = 1650;
-	var endYear = 1800;
+	var startYear = 1350;
+	var endYear = 1550;
 	
 	var markers = [];
 	var circles = [];
 	
 	function createMarker(latlng, id, medium, indexInMarkers){
+
+		var icon;
+
+		for(var key in mediumToColor){
+			if(medium == mediumToColor[key][2]){
+				icon = mediumToColor[key][0] + "_waypoint.png";
+				break;
+			}
+		}
+
+		if(icon == undefined){
+			icon = "yellow_waypoint.png";
+		}
+
+
 		var marker = new google.maps.Marker({
 			map: map,
-			icon: mediumToColor[medium][0] + "_waypoint.png",
-			title: "test marker",
+			icon: icon,
 			position: latlng,
 			animation: google.maps.Animation.DROP
 		 });
-					 
+		
+		for(var i = 0; i < markers.length; i++){
+			if (markers[i].getPosition().lat() == marker.getPosition().lat() && markers[i].getPosition().lng() == marker.getPosition().lng()){
+				var oldPos = marker.getPosition();
+				var newPos = new google.maps.LatLng(oldPos.lat() + (Math.random() * .2), oldPos.lng() + (Math.random() * .2));
+				marker.setPosition(newPos);
+			}
+		}
 					 
 		google.maps.event.addListener(marker, 'click', function() {			 
-			map.setZoom(5);
+			map.setZoom(8);
 			map.setCenter(marker.getPosition());
 			update_piece(id);
 		 });
@@ -110,14 +142,14 @@
 	}
 	
 	function update_piece(id) {
-		$.getJSON("/paintings/" + id + ".json", function(json){
-			if(json['success']){
-				document.getElementById("piece_html").innerHTML = "<a href='" + json['image'] + "' target='_blank'><img src='" + json['image'] + "' alt='mona lisa' /></a>";
-				$( "#piece_div" ).css('visibility', 'visible');
-				runEffect("slide");
-				pieceDisplayed = true;
+		$.get("/paintings/" + id + ".html", function (data){
+			/*resize image */
+			document.getElementById("piece_html").innerHTML = data;
+			$( "#piece_div" ).css('visibility', 'visible');
+			runEffect("slide");
+			pieceDisplayed = true;
 			}
-		});
+		);
 	}
 	
 	function getYearRangeArr(){
@@ -133,10 +165,13 @@
 			if ((lowerYear > higherYear  && resultArr[2] == "AD" && resultArr[4] == "AD") ||
 				(lowerYear < higherYear && resultArr[2] == "BC" && resultArr[4] == "BC")||
 				(resultArr[2] == "AD" && resultArr[4] == "BC")){
-				document.getElementById('inputYearError').innerHTML = "Minimum year (" + lowerYear + resultArr[2] + ") is higher then max year (" + higherYear + resultArr[4] + ")"
+				document.getElementById('inputYearError').innerHTML = "Minimum year (" + lowerYear + resultArr[2] + ") is higher then max year (" + higherYear + resultArr[4] + ")."
 				return false;
 			} else if(higherYear > new Date().getFullYear()){
 				document.getElementById('inputYearError').innerHTML = "Only years up to the current one (" + new Date().getFullYear() + ") are allowed.";
+				return false;
+			} else if(lowerYear < 1300 && resultArr[2] == "AD"){
+				document.getElementById('inputYearError').innerHTML = "Only years after 1300 are allowed.";
 				return false;
 			} else{
 				
@@ -155,7 +190,7 @@
 			}
 		}
 
-		document.getElementById('inputYearError').innerHTML = "Please format the year range in the form \"(year)AD/BC - (year)AD/BC\".";
+		document.getElementById('inputYearError').innerHTML = "Please format the year range in the form \"(year)AD - (year)AD\".";
 		return false;
 	}
 	
@@ -166,21 +201,12 @@
 			return;
 		}
 		
-		for(var i=0; i< markers.length; i++){
-			markers[i].setMap(null);
-		}
-		for(var i = 0; i < circles.length; i++){
-				circles[i].setMap(null);
-		}
-		markers = [];
-		circles = [];
-		
 		/**Get mediums that are checked **/
 		mediumsArr = [];
 		checkBoxes = document.getElementById("medium-checks").getElementsByTagName('input');
 		for (var i=0; i<checkBoxes.length; i++) {
 			if(checkBoxes[i].checked){
-				mediumsArr.push(checkBoxes[i].id);
+				mediumsArr.push(mediumToColor[checkBoxes[i].id][2]);
 			}
 		}
 		if(mediumsArr.length == 0){
@@ -190,22 +216,31 @@
 		/**Makes call to server with year range and mediums that are checked **/
 		$.getJSON("/pointUpdate",  {yearRange: yearRangeArr, mediums: mediumsArr}, function(json){
 			if(json['success']){
+					for(var i=0; i< markers.length; i++){
+						markers[i].setMap(null);
+					}
+					for(var i = 0; i < circles.length; i++){
+						circles[i].setMap(null);
+					}
+						markers = [];
+						circles = [];
+
 				markers = [];
 				var numPieces = json['pieces'].length;
 				for(var i=0; i<numPieces; i++){
 					setTimeout(function() {
 						var piece = json['pieces'].pop();
-						markers[markers.length]	= createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['_id'], piece['medium'], i);
+						markers[markers.length]	= createMarker(new google.maps.LatLng(piece['lat'],piece['lng']), piece['_id']['$oid'], piece['medium'], i);
 						if(markers.length == numPieces){
 							determineCirclesMap();
 						}
-						}, i * 180);
+						}, i * 30);
 				}
 				closeDisplay();
 				map.setZoom(3);
 				map.setCenter(centerLocation);
 			} else{
-				alert("something went wrong / no paintings returned");
+				document.getElementById('inputYearError').innerHTML = "No pieces were found.";
 			}
 		});
 		
@@ -213,7 +248,7 @@
 
 	function determineCirclesMap(){
 		var markers2d = [];
-		var numCloseCircles = 1;
+		var numCloseCircles = 2;
 		/*I believe this is 500 km*/
 		var closeDistance = 500000;
 		var foundNeighbor;
@@ -338,7 +373,7 @@
 	$(function() {
 		$( "#slider-range" ).slider({
 			range: true,
-			min: -300,
+			min: 1300,
 			max: new Date().getFullYear(),
 			values: [ startYear, endYear ],
 			slide: function( event, ui ) {
@@ -424,13 +459,13 @@
 		
 		<img id='timeline' src='timeline.png' alt='Timeline Image' /><br/>
 		<div id="medium-checks">
-			<span id="oilSpan" class="medSp"><input type="checkbox" class='medChk' id="oilOnPanel"><span class="clickCheck" onclick="checkThis('oilOnPanel')" > Oil on Panel</span></span>
-			<span id="pastelSpan" class="medSp"><input type="checkbox" class="medChk" id="pastel"><span class="clickCheck" onclick="checkThis('pastel')"> Pastel</span></span>
-			<span id="temperaSpan" class="medSp"><input type="checkbox" class="medChk" id="tempera"><span class="clickCheck" onclick="checkThis('tempera')"> Tempera</span></span>
-			<span id="gessoSpan" class="medSp"><input type="checkbox" class="medChk" id="gesso"><span class="clickCheck" onclick="checkThis('gesso')"> Gesso</span></span>
-			<span id="mastieSpan" class="medSp"><input type="checkbox" class="medChk" id="mastie" ><span class="clickCheck" onclick="checkThis('mastie')"> Mastie</span></span>
-			<span id="oilOnPaintSpan" class="medSp"><input type="checkbox" class="medChk" id="oilPaint"><span class="clickCheck" onclick="checkThis('oilPaint')"> Oil Paint</span></span>
-			<span id="portraitSpan" class="medSp"><input type="checkbox" class="medChk" id="portrait"><span class="clickCheck" onclick="checkThis('portrait')"> Portrait</span></span>
+			<span id="oilPaintingSpan" class="medSp"><input type="checkbox" class='medChk' id="oilPainting" checked><span class="clickCheck" onclick="checkThis('oilPainting')" > Oil painting</span></span>
+			<span id="temperaOnPanelSpan" class="medSp"><input type="checkbox" class="medChk" id="temperaOnPanel" checked><span class="clickCheck" onclick="checkThis('temperaOnPanel')"> Tempera on panel</span></span>
+			<span id="oilAndPaperOnCanvasSpan" class="medSp"><input type="checkbox" class="medChk" id="oilAndPaperOnCanvas" checked><span class="clickCheck" onclick="checkThis('oilAndPaperOnCanvas')"> Oil and paper on canvas</span></span>
+			<span id="frescoSpan" class="medSp"><input type="checkbox" class="medChk" id="fresco" checked><span class="clickCheck" onclick="checkThis('fresco')"> Fresco</span></span>
+			<span id="acrylicPaintSpan" class="medSp"><input type="checkbox" class="medChk" id="acrylicPaint" checked><span class="clickCheck" onclick="checkThis('acrylicPaint')"> Acrylic paint</span></span>
+			<span id="oilOnCanvasSpan" class="medSp"><input type="checkbox" class="medChk" id="oilOnCanvas" checked><span class="clickCheck" onclick="checkThis('oilOnCanvas')"> Oil on canvas</span></span>
+			<span id="otherSpan" class="medSp"><input type="checkbox" class="medChk" id="other" checked><span class="clickCheck" onclick="checkThis('other')"> Other</span></span>
 		</div>
 	</div>
 	

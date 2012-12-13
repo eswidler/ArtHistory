@@ -1,39 +1,68 @@
 <html>
-	<body>
-		<div itemscope itemtype="http://schema.org/Painting">
-		{% if 'title' in painting %}
-			<h3 itemprop="name">{{painting['title']}}</h3>
-		{% end %}
+	<script>
+	function resizeImg(){
+		var image = document.getElementById('paintingImg');
+		var percent = -1;
+		var allowWidth = 250;
+		var allowHeight = 400;
+
+
+		if(image.width > allowWidth){
+			percent = allowWidth / image.width; 
+
+		} else if(image.height > allowHeight){
+			percent = allowHeight / image.height; 
+		}
+
+		if(percent != -1){
+			var newW = percent * image.width;
+			var newH = percent * image.height;
+
+			image.width = newW;
+			image.height = newH;
+		}
+
+		document.getElementById('loading').style.visibility = 'hidden';
+		image.style.visibility = "visible";
+	}
+	</script>
+	<body >
+		<div itemscope itemtype="http://schema.org/Painting" style="font-size:110%;">
 		{% if 'image' in painting %}
-			<img src={{painting['image']}} alt={{painting['title']}} itemprop="image" width=300px>
+			<div id='loading' style='float:middle;'/>Loading...<br/><br/></div><a href={{painting['image']}} target='_blank'><img id="paintingImg" src={{painting['image']}} alt={{painting['title']}} itemprop="image" style="float:left; margin: 10px;visibility: hidden;" onload="resizeImg();"></a>
 		{% end %}
-		{% if 'artist' in painting %}
-		<div> Artist: <span itemprop="author">{{painting['artist']}}</span> </div>
-		{% end %}
-		{% if 'year_created' in painting %}
-		<div> Date Created: <span itemprop="dateCreated">{{painting['year_created']}}</span></div>
-		{% end %}
-		{% if 'medium' in painting %}
-		<div>Medium: <span>{{painting['medium']}}</span> </div>
-		{% end %}
-		<div itemprop="contentLocation" itemscope itemtype="http://schema.org/Place">
-			{% if 'where' in painting %}
-			<div>Location: <span itemprop="name">{{painting['where']}}</span></div>
+			{% if 'title' in painting %}
+				<h3 itemprop="name">{{painting['title']}}</h3>
 			{% end %}
-			<div itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
-				{% if 'lat' in painting %}
-				<div>Latitude: {{painting['lat']}}</div>
+			{% if 'artist' in painting %}
+			<h4><i><span itemprop="author">{{painting['artist']}}</span></i> </h4>
+			{% end %}
+			{% if 'year_created' in painting %}
+			<div><span itemprop="dateCreated">{{painting['year_created']}}</span></div>
+			{% end %}
+			{% if 'medium' in painting %}
+			<div>Medium: <span>{{painting['medium']}}</span> </div>
+			{% end %}
+			<div itemprop="contentLocation" itemscope itemtype="http://schema.org/Place">
+				
+				{% if 'where' in painting %}
+				<div><span itemprop="name">{{painting['where']}}</span></div>
 				{% end %}
-				{% if 'lng' in painting %}
-				<div>Longitude: {{painting['lng']}}</div>
-				{% end %}
-				<meta itemprop="latitude" content={{painting['lat']}} />
-    			<meta itemprop="longitude" content={{painting['lng']}} />
+				<div itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					{% if 'lat' in painting %}
+					(Lat: {{painting['lat']}}, 
+					<meta itemprop="latitude" content={{painting['lat']}} />
+					{% end %}
+					{% if 'lng' in painting %}
+					Lng: {{painting['lng']}})
+					<meta itemprop="longitude" content={{painting['lng']}} />
+					{% end %}
+					
+				</div><br/>
 			</div>
-		</div>
-		{% if 'description' in painting %}
-		<div>Description: <span itemprop= "description">{{painting['description']}}</description></div>
-		{% end %}
-		</div>
+			{% if 'description' in painting %}
+			<div><span itemprop= "description" style="float:left;clear:both;">{{painting['description']}}</span></div>
+			{% end %}
+		</div><br/><br/>
 	</body>
 </html>

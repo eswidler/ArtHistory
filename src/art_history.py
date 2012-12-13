@@ -19,6 +19,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
+import unicodedata
 
 from tornado.options import define, options
 
@@ -48,8 +49,8 @@ class ArtHistory(tornado.web.Application):
             
             #Urls for REST retrieval of data
             (r"/paintings(\..+)?", AllPaintingsHandler),
-            (r"/paintings/([0-9]+)(\..+)?", PaintingHandler), 
-            (r"/paintings/([0-9]+)/location(\..+)?", PaintingHandler),
+            (r"/paintings/([0-9a-zA-Z]+)(\..+)?", PaintingHandler), 
+            (r"/paintings/([0-90-9a-zA-Z]+)/location(\..+)?", PaintingHandler),
             
             #Urls for Application's queries to the server
             (r"/pointUpdate(\..+)?", PointUpdateHandler),
@@ -124,12 +125,19 @@ class AllPaintingsHandler(BaseHandler):
     
 #Gets info on specific painting
 class PaintingHandler(BaseHandler):
-	SUPPORTED_METHODS = ("PUT", "GET", "DELETE")
-	
+    SUPPORTED_METHODS = ("PUT", "GET", "DELETE")
+    
     def get(self, paintingID, format):
         painting= self.db.get_painting(paintingID)
         mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
         painting['success']=True
+        
+        try:
+            if urllib.urlopen(unicodedata.normalize('NFKD', painting['image'].decode('unicode-escape')).encode('ascii','ignore')).getcode() == 404:
+                painting['image'] = '../image_not_found.jpg'
+        except IOError:
+            pass
+            
         if format is None:
             fmt= self.get_format()
             self.redirect("/paintings/%s" %paintingID +fmt, status=303)
@@ -138,6 +146,7 @@ class PaintingHandler(BaseHandler):
             #paintingDict= dict(d1, **painting)
             self.write(painting)
         elif format in mappings:
+            print(painting)
             content_type=mappings[format]
             self.set_header("Content-Type",content_type)
             self.render("painting"+format,painting=painting)
@@ -226,7 +235,7 @@ class PaintingDatabase(object):
     """in memory database of MongoLab paintings database"""
     def __init__(self):
         #pull in full paintings collection from MongoLab
-        self.apikey= "?apiKey=50c72d32e4b067a576ea9bbf"
+        self.apikey= "?apiKey=50c6ab59e4b05e32287d6e3d"
         self.fixedURL= "https://api.mongolab.com/api/1/databases/art_history/collections/paintings"
         url = self.fixedURL + self.apikey
         f= urllib.urlopen(url)
@@ -236,7 +245,7 @@ class PaintingDatabase(object):
         self.paintings={}
         self.mediums=[]
         for painting in results:
-            self.paintings[painting["_id"]]=painting
+            self.paintings[painting["_id"]["$oid"]]=painting
             if "medium" in painting:
                 if painting["medium"] not in self.mediums:
                     self.mediums.append(painting["medium"])
@@ -249,7 +258,7 @@ class PaintingDatabase(object):
         for value in self.paintings.values():
             painting= dict(value)
             id= painting["_id"]
-            uri= base_uri +"/paintings/"+str(id)
+            uri= base_uri +"/paintings/"+str(id['$oid'])
             del painting["_id"]
             painting["uri"]=uri 
             paintings.append(painting)
@@ -258,7 +267,7 @@ class PaintingDatabase(object):
     
     def get_painting(self, paintingID):
         """Returns data about a painting"""
-        painting= self.paintings[int(paintingID)]
+        painting= self.paintings[paintingID]
         return painting
     
     def update_painting(self, paintingID, painting):
@@ -266,9 +275,9 @@ class PaintingDatabase(object):
         self.paintings[paintingID] = painting
         
 	def delete_painting(self, paintingID):
-	"""Deletes a movie and references to this movie"""
-		del self.paintings[paintingID]
-		for actor in self.actors.values():
+	   """Deletes a movie and references to this movie"""
+	   del self.paintings[paintingID]
+	   for actor in self.actors.values():
 			if movie_id in actor['movies']:
 				print "Deleting movie reference from actor %s" % actor['id']
 				actor['movies'].remove(movie_id)
@@ -279,14 +288,19 @@ class PaintingDatabase(object):
     def filter(self,yearRange,mediums):
         """Returns paintings that fit the given yearRange and mediums"""
         results=[]
+        
+        validMediums = ["Oil painting", "Tempera on panel", "Oil and paper on canvas", "Fresco", "Acrylic paint", "Oil on canvas"]
         for painting in self.paintings.values():
             valid= True
             if "year_created" in painting:
                 if int(painting["year_created"])> int(yearRange[1]) or int(painting["year_created"])< int(yearRange[0]):
                     valid= False
             if "medium" in painting:
-                    if painting["medium"] not in mediums:
+                    if mediums.__contains__('other') and not validMediums.__contains__(painting["medium"]):
+                        valid=True
+                    elif painting["medium"] not in mediums:
                         valid= False
+                    
             if valid:
                 results.append(painting)
         print results

@@ -60,7 +60,7 @@ position: absolute;
 	-moz-box-shadow: 10px 10px 5px #888;
 	-webkit-box-shadow: 10px 10px 5px #888;
 	box-shadow: 10px 10px 5px #888;
-	overflow-y: hidden;
+	overflow-y: auto;
 	overflow-x: hidden;
 }
 
@@ -77,6 +77,7 @@ position: absolute;
 	cursor: pointer;
 	width: 15px;
 	height: 15px;
+	margin-top: 5px;
 }
 
 #medium-checks{
@@ -124,11 +125,11 @@ position: absolute;
 
 #timeline{
 	position: relative;
-	bottom: 20px;
-	right: 10px;
+	bottom: 29px;
+	right: 70px;
 	height: 80px;
 	/*width: 835px;*/
-	width: 104%;
+	width: 112%;
 	margin: 0px;
 }
 
