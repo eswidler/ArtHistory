@@ -124,24 +124,41 @@ class AllPaintingsHandler(BaseHandler):
     
 #Gets info on specific painting
 class PaintingHandler(BaseHandler):
+	SUPPORTED_METHODS = ("PUT", "GET", "DELETE")
+	
     def get(self, paintingID, format):
         painting= self.db.get_painting(paintingID)
         mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
+        painting['success']=True
         if format is None:
             fmt= self.get_format()
             self.redirect("/paintings/%s" %paintingID +fmt, status=303)
         elif format == ".json":
-            d1 = {'success': True}
-            paintingDict= dict(d1, **painting)
-            #exampleDict = {'success': True, 'image': 'http://images.wikia.com/central/images/e/eb/250px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'}
-            self.write(paintingDict)
-            #self.write(exampleDict)
+            #d1 = {'success': True}
+            #paintingDict= dict(d1, **painting)
+            self.write(painting)
         elif format in mappings:
             content_type=mappings[format]
             self.set_header("Content-Type",content_type)
             self.render("painting"+format,painting=painting)
         else:
             self.write_error(401, message="Format %s not supported" % format)
+            
+    def put(self, paintingID, format):
+        if paintingID in self.db.paintings:
+            print "Updating painting %s" % paintingID
+            new_painting = json.loads(self.request.body)
+            self.db.update_painting(paintingID, new_painting[1])
+        else:
+        	self.write_error(404,message="Painting %s does not exist" %paintingID)
+            
+    def delete(self, paintingID, format):
+        if paintingID in self.db.movies:
+            print "Deleting painting %s" % paintingID
+            self.db.delete_painting(paintingID)
+        else:
+        	self.write_error(404, message="Painting %s does not exist" %paintingID)
+    
 
 class CSSHandler(BaseHandler):
     def get(self, fileName):
@@ -221,8 +238,8 @@ class PaintingDatabase(object):
         for painting in results:
             self.paintings[painting["_id"]]=painting
             if "medium" in painting:
-            	if painting["medium"] not in self.mediums:
-            		self.mediums.append(painting["medium"])
+                if painting["medium"] not in self.mediums:
+                    self.mediums.append(painting["medium"])
         
     # CRUD operations
     
@@ -243,25 +260,37 @@ class PaintingDatabase(object):
         """Returns data about a painting"""
         painting= self.paintings[int(paintingID)]
         return painting
+    
+    def update_painting(self, paintingID, painting):
+    	"""Updates a painting with a given id"""
+        self.paintings[paintingID] = painting
+        
+	def delete_painting(self, paintingID):
+	"""Deletes a movie and references to this movie"""
+		del self.paintings[paintingID]
+		for actor in self.actors.values():
+			if movie_id in actor['movies']:
+				print "Deleting movie reference from actor %s" % actor['id']
+				actor['movies'].remove(movie_id)
+
+        
+    # extra functions
         
     def filter(self,yearRange,mediums):
-    	"""Returns paintings that fit the given yearRange and mediums"""
-    	results=[]
-    	for painting in self.paintings.values():
-    		valid= True
-    		print painting["year_created"]
-    		print painting["year_created"]< yearRange[0]
-    		if "year_created" in painting:
-    			if int(painting["year_created"])> int(yearRange[1]) or int(painting["year_created"])< int(yearRange[0]):
-    				valid= False
-    		if "medium" in painting:
-    				if painting["medium"] not in mediums:
-    					valid= False
-    		if valid:
-    			results.append(painting)
-    		print valid
-    	print results
-    	return results
+        """Returns paintings that fit the given yearRange and mediums"""
+        results=[]
+        for painting in self.paintings.values():
+            valid= True
+            if "year_created" in painting:
+                if int(painting["year_created"])> int(yearRange[1]) or int(painting["year_created"])< int(yearRange[0]):
+                    valid= False
+            if "medium" in painting:
+                    if painting["medium"] not in mediums:
+                        valid= False
+            if valid:
+                results.append(painting)
+        print results
+        return results
                     
 ### Script entry point ###
 
