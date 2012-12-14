@@ -14,7 +14,7 @@
 		<div> Date Created: <span itemprop="dateCreated">{{painting['year_created']}}</span></div>
 		{% end %}
 		{% if 'medium' in painting %}
-		<div>Medium: <span>{{painting['medium']}}</span> </div>
+		<div>Medium: <span itemprop="medium">{{painting['medium']}}</span> </div>
 		{% end %}
 		<div itemprop="contentLocation" itemscope itemtype="http://schema.org/Place">
 			{% if 'where' in painting %}

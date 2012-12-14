@@ -127,7 +127,7 @@ class PaintingHandler(BaseHandler):
     SUPPORTED_METHODS = ("PUT", "GET", "DELETE","POST")
     
     def get(self, paintingID, format):
-        painting= self.db.get_painting(paintingID)
+        painting= self.db.get_painting(paintingID,self.base_uri)
         mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
         painting['success']=True
         if format is None:
@@ -153,7 +153,7 @@ class PaintingHandler(BaseHandler):
             self.write_error(404,message="Painting %s does not exist" %paintingID)
             
     def delete(self, paintingID, format):
-        if paintingID in self.db.movies:
+        if paintingID in self.db.paintings:
             print "Deleting painting %s" % paintingID
             self.db.delete_painting(paintingID)
         else:
@@ -244,9 +244,11 @@ class PaintingDatabase(object):
         return paintings
     
     
-    def get_painting(self, paintingID):
+    def get_painting(self, paintingID,base_uri):
         """Returns data about a painting"""
         painting= self.paintings[int(paintingID)]
+        uri= base_uri +"/paintings/"+str(paintingID)
+        painting["uri"]=uri
         return painting
     
     def update_painting(self, paintingID, painting):
