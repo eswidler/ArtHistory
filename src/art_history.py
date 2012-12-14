@@ -100,6 +100,8 @@ class HomeHandler(BaseHandler):
 
 #Gets info on all paintings
 class AllPaintingsHandler(BaseHandler):
+    SUPPORTED_METHODS = ("GET","POST")
+    
     def get(self,format):
         paintings= self.db.list_paintings(self.base_uri)
         mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
@@ -114,36 +116,46 @@ class AllPaintingsHandler(BaseHandler):
             self.render("paintings"+format, paintings=paintings)
         else:
             self.write_error(401, message="Format %s not supported" % format)
+            
+    def post(self,format):
+        new_painting = json.loads(self.request.body)
+        new_id = self.db.create_painting(new_painting[1])
+        self.set_status(201)
+        self.set_header("Location", self.base_uri + "/paintings/" + new_id)
     
 #Gets info on specific painting
 class PaintingHandler(BaseHandler):
-    SUPPORTED_METHODS = ("PUT", "GET", "DELETE","POST")
+    SUPPORTED_METHODS = ("PUT", "GET", "DELETE")
     
     def get(self, paintingID, format):
         painting= self.db.get_painting(paintingID,self.base_uri)
-        mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
-        painting['success']=True
         
-        try:
-            if urllib.urlopen(unicodedata.normalize('NFKD', painting['image'].decode('unicode-escape')).encode('ascii','ignore')).getcode() == 404:
-                painting['image'] = '../image_not_found.jpg'
-        except IOError:
-            pass
-            
-        if format is None:
-            fmt= self.get_format()
-            self.redirect("/paintings/%s" %paintingID +fmt, status=303)
-        elif format == ".json":
-            #d1 = {'success': True}
-            #paintingDict= dict(d1, **painting)
-            self.write(painting)
-        elif format in mappings:
-            print(painting)
-            content_type=mappings[format]
-            self.set_header("Content-Type",content_type)
-            self.render("painting"+format,painting=painting)
+        if painting is None:
+            self.write_error(404, message="Painting %s does not exist" %paintingID)
         else:
-            self.write_error(401, message="Format %s not supported" % format)
+			mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
+			painting['success']=True
+			
+			try:
+				if urllib.urlopen(unicodedata.normalize('NFKD', painting['image'].decode('unicode-escape')).encode('ascii','ignore')).getcode() == 404:
+					painting['image'] = '../image_not_found.jpg'
+			except IOError:
+				pass
+				   
+			if format is None:
+				fmt= self.get_format()
+				self.redirect("/paintings/%s" %paintingID +fmt, status=303)
+			elif format == ".json":
+				#d1 = {'success': True}
+				#paintingDict= dict(d1, **painting)
+				self.write(painting)
+			elif format in mappings:
+				print(painting)
+				content_type=mappings[format]
+				self.set_header("Content-Type",content_type)
+				self.render("painting"+format,painting=painting)
+			else:
+				self.write_error(401, message="Format %s not supported" % format)
             
     def put(self, paintingID, format):
         if paintingID in self.db.paintings:
@@ -159,10 +171,6 @@ class PaintingHandler(BaseHandler):
             self.db.delete_painting(paintingID)
         else:
             self.write_error(404, message="Painting %s does not exist" %paintingID)
-            
-    def post(self,format):
-    	new_painting = json.loads(self.request.body)
-    	new_id = self.db.create_painting(new_painting[1])
     
 
 class CSSHandler(BaseHandler):
@@ -247,25 +255,28 @@ class PaintingDatabase(object):
     
     def get_painting(self, paintingID,base_uri):
         """Returns data about a painting"""
-        painting= self.paintings[paintingID]
-        uri= base_uri +"/paintings/"+str(paintingID)
-        painting["uri"]=uri
-        return painting
+        if paintingID in self.paintings:
+            painting= self.paintings[paintingID]
+            uri= base_uri +"/paintings/"+str(paintingID)
+            painting["uri"]=uri
+            return painting
+        else: 
+            return None
     
     def update_painting(self, paintingID, painting):
         """Updates a painting with a given id"""
         self.paintings[paintingID] = painting
         
     def delete_painting(self, paintingID):
-    	"""Deletes a painting"""
+        """Deletes a painting"""
         del self.paintings[paintingID]
         
-	def create_painting(self, painting):
-		"""Creates a new painting and returns the assigned ID"""
-		max_id = sorted([int(paintingID) for paintingID in self.paintings])[-1]
-		new_id = str(max_id + 1)
-		self.paintings[new_id] = painting
-		return new_id
+    def create_painting(self, painting):
+        """Creates a new painting and returns the assigned ID"""
+        max_id = sorted([int(paintingID) for paintingID in self.paintings])[-1]
+        new_id = str(max_id + 1)
+        self.paintings[new_id] = painting
+        return new_id
 
         
     # extra functions
