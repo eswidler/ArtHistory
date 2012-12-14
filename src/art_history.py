@@ -2,10 +2,10 @@
 # encoding: utf-8
 """
 
-Eric Swidler     ejs296
-HW 6            
+Eric Swidler, Stephanie Gary, Jessica Kane
 
-movie_service.py: a RESTful movie data service
+Paint by LatLng
+Main tornado webservice
 
 """
 import os
@@ -24,14 +24,11 @@ import unicodedata
 from tornado.options import define, options
 
 define("port", default=8888, help="run on the given port", type=int)
-define("movies", default="../data/movies.csv", help="movies data file")
-define("actors", default="../data/actors.csv", help="actors data file")
-define("mappings", default="../data/movie_actors.csv", help="key mapping file")
 
-### Movie Web Service implementation ###
+### Web Service implementation ###
 
 class ArtHistory(tornado.web.Application):
-    """The Movie Service Web Application"""
+    """Main Web Application Class"""
     def __init__(self, db):
         favicon_path = '/templates/static/favicon.ico'
         settings = dict(
@@ -162,7 +159,7 @@ class PaintingHandler(BaseHandler):
             self.write_error(404,message="Painting %s does not exist" %paintingID)
             
     def delete(self, paintingID, format):
-        if paintingID in self.db.movies:
+        if paintingID in self.db.paintings:
             print "Deleting painting %s" % paintingID
             self.db.delete_painting(paintingID)
         else:

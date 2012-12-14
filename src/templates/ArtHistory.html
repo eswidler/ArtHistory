@@ -15,6 +15,7 @@
       var pieceDisplayed = true;
 
 	
+	/*Dict of medium type to color*/
 	var mediumToColor = {
 		oilPainting: ["blue", "#0198E1", "Oil painting"],
 		temperaOnPanel: ["green", "#4DBD33", "Tempera on panel"],
@@ -24,17 +25,11 @@
 		oilOnCanvas: ["red", "#FF0000", "Oil on canvas"],
 		other: ["yellow", "#FCD116", "other"]
 
-		/*oil: ["blue", "#0198E1"],
-		pastel: ["green", "#4DBD33"],
-		tempera: ["orange", "#FF8000"],
-		gesso: ["pink", "#F6CCDA"],
-		mastie: ["purple", "#CD00CD"],
-		oilPaint: ["red", "#FF0000"],
-		portrait: ["yellow", "#FCD116"]*/
 	};
 
 	var centerLocation = new google.maps.LatLng(30, 355);
 	
+	/*Initialization of google map */
       function initialize() {
         var mapDiv = document.getElementById('map_canvas');
         var mapOptions = {
@@ -61,6 +56,7 @@
 
       }
 	  
+	  /*Colors the buttons on the UI */
 	  function colorizeMediums(){
 		var mediumEls = document.getElementById("medium-checks").getElementsByTagName('span');
 		for(var i = 0; i < mediumEls.length; i++){
@@ -101,6 +97,7 @@
 	var markers = [];
 	var circles = [];
 	
+	/*Creates the marker on the map*/
 	function createMarker(latlng, id, medium, indexInMarkers){
 
 		var icon;
@@ -141,6 +138,7 @@
 		return marker;
 	}
 	
+	/*Call to the server for html on a particular piece to fill piece div */
 	function update_piece(id) {
 		$.get("/paintings/" + id + ".html", function (data){
 			/*resize image */
@@ -152,6 +150,7 @@
 		);
 	}
 	
+	/*Returns the year range that's in the text input box*/
 	function getYearRangeArr(){
 		var el = document.getElementById('years');
 		
@@ -194,6 +193,7 @@
 		return false;
 	}
 	
+	/*Method to get a new set of markers for the map based on what the settings are */
 	function update_points() {
 		yearRangeArr = getYearRangeArr();
 		if(!yearRangeArr){
@@ -246,10 +246,11 @@
 		
 	}
 
+	/*Creates the circles on the map according to where the markers are */
 	function determineCirclesMap(){
 		var markers2d = [];
 		var numCloseCircles = 2;
-		/*I believe this is 500 km*/
+		/*This should be 500 km*/
 		var closeDistance = 500000;
 		var foundNeighbor;
 		var marker;
@@ -286,6 +287,7 @@
 		return google.maps.geometry.spherical.computeDistanceBetween(mark1.getPosition(), mark2.getPosition());
 	}
 
+	/*Determines the midpoint and size for the circles */
 	function determineCirclesReduce(markerArr){
 		var mark = markerArr[0];
 
@@ -359,6 +361,7 @@
           circles.push(new google.maps.Circle(circleOptions));
 	}
 	
+	/*Checks corresponding checkbox*/
 	function checkThis(boxName) {
 		boxEl = document.getElementById(boxName)
 		
@@ -384,6 +387,7 @@
 			"AD - " + $( "#slider-range" ).slider( "values", 1 ) + "AD" );
 	});
 	
+	/*When the slider moves, the values are updated in the textbox */
 	function sliderEventFunction(){
 		var values = $( "#slider-range" ).slider("option", "values");
 		var strOut = "";
@@ -404,6 +408,7 @@
 
 	}
 	
+	/*Jquery effects on the piece div */
 	function runEffect(selectedEffect) {
 
 			// most effect types need no options passed by default
