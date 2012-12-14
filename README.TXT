@@ -6,7 +6,7 @@ To run the application on your machine, just clone the git project, navigate to 
 
 
 Updating the Database:
-The application points to a MongoLab database. To refresh the contents of that database, navigate to the database_script folder and run the command "python painting_crawler.py". It's dependent on the SPARQLWrapper, simplejson, and httplib2. Make sure you have those installed.
+The application points to a MongoLab database. To refresh the contents of that database, navigate to the database_script folder and run the command "python painting_crawler.py". It's dependent on the SPARQLWrapper, simplejson, and httplib2. Make sure you have those installed. As a warning, the script will take between 30 minutes and a hour to run.
 
 
 Changing the Page Counts file:
