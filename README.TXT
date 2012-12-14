@@ -11,3 +11,5 @@ The application points to a MongoLab database. To refresh the contents of that d
 
 Changing the Page Counts file:
 Changing the pagecounts file actually involves changing code. First, you need to download the new file, unzip it, and place it in the database_script folder. Then update the main method of the painting_crawler.py script to point to the name of that file (it's at line 298). 
+
+CRUD Operations

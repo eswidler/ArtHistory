@@ -52,11 +52,6 @@ class ArtHistory(tornado.web.Application):
             #Urls for Application's queries to the server
             (r"/pointUpdate(\..+)?", PointUpdateHandler),
             
-            #Urls for painting info updation, new paintings, painting deletetion, etc
-            #(r"/pointUpdate(\..+)?", PointUpdateHandler),
-           #(r"/pointUpdate(\..+)?", PointUpdateHandler),
-            #(r"/pointUpdate(\..+)?", PointUpdateHandler),
-            
             #Urls for css, jss, and support files
             (r"/(css/[0-9a-zA-Z]+\.css)", CSSHandler),
             (r"/(js/[0-9a-zA-Z\.\-\/\_]+.png)", tornado.web.StaticFileHandler, dict(path=settings['jquery_path'])),
