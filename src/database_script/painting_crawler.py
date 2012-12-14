@@ -275,7 +275,6 @@ def chooseDBPediaPantings(sortedEnglishPages, allPaintings):
 				filteredPaintings.append(painting)
 				break
 	
-	print simplejson.dumps(filteredPaintings)
 	return filteredPaintings
 
 def insertPaintingsIntoDatabase(filteredPaintings):
