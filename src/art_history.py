@@ -14,6 +14,7 @@ import json
 import re
 import urlparse
 import urllib
+import cgi
 
 import tornado.httpserver
 import tornado.ioloop
@@ -133,29 +134,29 @@ class PaintingHandler(BaseHandler):
         if painting is None:
             self.write_error(404, message="Painting %s does not exist" %paintingID)
         else:
-			mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
-			painting['success']=True
-			
-			try:
-				if urllib.urlopen(unicodedata.normalize('NFKD', painting['image'].decode('unicode-escape')).encode('ascii','ignore')).getcode() == 404:
-					painting['image'] = '../image_not_found.jpg'
-			except IOError:
-				pass
-				   
-			if format is None:
-				fmt= self.get_format()
-				self.redirect("/paintings/%s" %paintingID +fmt, status=303)
-			elif format == ".json":
-				#d1 = {'success': True}
-				#paintingDict= dict(d1, **painting)
-				self.write(painting)
-			elif format in mappings:
-				print(painting)
-				content_type=mappings[format]
-				self.set_header("Content-Type",content_type)
-				self.render("painting"+format,painting=painting)
-			else:
-				self.write_error(401, message="Format %s not supported" % format)
+            mappings= {".html":"text/html",".xml":"application/xml",".ttl":"text/turtle"}
+            painting['success']=True
+            
+            try:
+                if urllib.urlopen(unicodedata.normalize('NFKD', painting['image'].decode('unicode-escape')).encode('ascii','ignore')).getcode() == 404:
+                    painting['image'] = '../image_not_found.jpg'
+            except IOError:
+                pass
+                   
+            if format is None:
+                fmt= self.get_format()
+                self.redirect("/paintings/%s" %paintingID +fmt, status=303)
+            elif format == ".json":
+                #d1 = {'success': True}
+                #paintingDict= dict(d1, **painting)
+                self.write(painting)
+            elif format in mappings:
+                print(painting)
+                content_type=mappings[format]
+                self.set_header("Content-Type",content_type)
+                self.render("painting"+format,painting=painting)
+            else:
+                self.write_error(401, message="Format %s not supported" % format)
             
     def put(self, paintingID, format):
         if paintingID in self.db.paintings:
@@ -233,6 +234,7 @@ class PaintingDatabase(object):
         self.paintings={}
         self.mediums=[]
         for painting in results:
+            painting['description']=cgi.escape(painting['description'],quote=True)
             self.paintings[painting["_id"]["$oid"]]=painting
             if "medium" in painting:
                 if painting["medium"] not in self.mediums:
