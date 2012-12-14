@@ -5,7 +5,7 @@ An INFO 4302 project.
 <b>Running the Program:</b>
 
 To run the application on your machine, just clone the git project, navigate to the src folder, and run the command “python art_history.py”.
-It's dependent on urlparse, urllib, tornado, codecs, and unicodedata. Make sure you have those installed.
+It's dependent on urlparse, urllib, and tornado. Make sure you have those installed.
 
 <b>Updating the Database:</b>
 
