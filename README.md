@@ -1,5 +1,6 @@
 ArtHistory
 ==========
+An INFO 4302 project.
 
 <b>Running the Program:</b>
 
